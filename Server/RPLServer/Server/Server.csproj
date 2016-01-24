@@ -95,6 +95,7 @@
   <ItemGroup>
     <Content Include="Views\web.config" />
     <Content Include="packages.config" />
+    <None Include="Properties\PublishProfiles\RichPersonLeaderBoardServer.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -108,6 +109,10 @@
     <Folder Include="Views\Leaderboard\" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Data\Data.csproj">
+      <Project>{789963C3-6FA7-4F4D-BC31-F164B79B8DE8}</Project>
+      <Name>Data</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Domain\Domain.csproj">
       <Project>{e98b4897-b358-40b4-ad5a-e67a82db1d6c}</Project>
       <Name>Domain</Name>
