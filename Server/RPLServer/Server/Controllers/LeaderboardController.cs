@@ -17,9 +17,9 @@ namespace Server.Controllers
             Dao = new PersonDao();
         }
 
-        public ActionResult Index()
+        public ActionResult Index(int offset = 0, int perPage = 100)
         {
-            return Json(Dao.GetPersons(0, 100), JsonRequestBehavior.AllowGet);
+            return Json(Dao.GetPersons(offset, perPage), JsonRequestBehavior.AllowGet);
         }
     }
 }
