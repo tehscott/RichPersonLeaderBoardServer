@@ -30,7 +30,18 @@ namespace Data
                     "        [InsertDate] [dateTime] NOT NULL CONSTRAINT DF_Person_InsertDate_GETDATE DEFAULT GETDATE(),\n" +
                     "        [UpdateDate] [dateTime] NOT NULL CONSTRAINT DF_Person_UpdateDate_GETDATE DEFAULT GETDATE()\n" +
                     "    )\n" +
-                    "END\n");
+                    "END\n" +
+                    "IF object_id('Payment', 'U') IS NULL\n" +
+                    "BEGIN\n" +
+                    "    CREATE TABLE [dbo].[Payment](\n" +
+                    "        [PaymentId] [int] NOT NULL PRIMARY KEY IDENTITY,\n" +
+                    "    	 [PersonId] [int] NOT NULL FOREIGN KEY REFERENCES Person(PersonId),\n" +
+                    "    	 [Amount] [decimal](15,2) NOT NULL,\n" +
+                    "        [InsertDate] [dateTime] NOT NULL CONSTRAINT DF_Payment_InsertDate_GETDATE DEFAULT GETDATE(),\n" +
+                    "        [UpdateDate] [dateTime] NOT NULL CONSTRAINT DF_Payment_UpdateDate_GETDATE DEFAULT GETDATE()\n" +
+                    "    )\n" +
+                    "END\n" +
+                    "");
             }
         }
 
