@@ -2,19 +2,17 @@ package com.mattandmikeandscott.richpersonleaderboard;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
-import android.support.v4.widget.Space;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 
+import com.mattandmikeandscott.richpersonleaderboard.adapters.PersonListAdapter;
+import com.mattandmikeandscott.richpersonleaderboard.domain.PeopleQueryType;
+import com.mattandmikeandscott.richpersonleaderboard.domain.Person;
+import com.mattandmikeandscott.richpersonleaderboard.network.Repository;
+
 import java.util.ArrayList;
-import java.util.List;
 
 public class MainFragment extends Fragment {
     /**
@@ -22,6 +20,7 @@ public class MainFragment extends Fragment {
      * fragment.
      */
     private static final String ARG_SECTION_NUMBER = "section_number";
+
 
     /**
      * Returns a new instance of this fragment for the given section
@@ -48,13 +47,8 @@ public class MainFragment extends Fragment {
 
                 ListView list = (ListView) rootView.findViewById(R.id.list);
 
-                ArrayList<String[]> people = new ArrayList<>();
-                for(int i = 0; i < 100; i++) {
-                    people.add(new String[] { "Scott", "$100,000,000" });
-                    people.add(new String[] { "Matt", "$100,000" });
-                    people.add(new String[] { "Mike", "$100" });
-                }
-
+                Repository repository = new Repository();
+                ArrayList<Person> people = repository.getPeople(PeopleQueryType.AllTime);
                 list.setAdapter(new PersonListAdapter(getContext(), people));
 
                 break;
