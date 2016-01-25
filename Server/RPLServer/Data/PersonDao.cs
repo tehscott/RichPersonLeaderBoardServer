@@ -26,11 +26,14 @@ namespace Data
                     "    CREATE TABLE [dbo].[Person](\n" +
                     "        [PersonId] [int] NOT NULL PRIMARY KEY IDENTITY,\n" +
                     "        [Name] [varchar](128) NOT NULL,\n" +
-                    "        [Wealth] [decimal](15, 2) NOT NULL\n" +
+                    "        [Wealth] [decimal](15, 2) NOT NULL,\n" +
+                    "        [InsertDate] [dateTime] NOT NULL CONSTRAINT DF_Person_InsertDate_GETDATE DEFAULT GETDATE(),\n" +
+                    "        [UpdateDate] [dateTime] NOT NULL CONSTRAINT DF_Person_UpdateDate_GETDATE DEFAULT GETDATE()\n" +
                     "    )\n" +
                     "END\n");
             }
         }
+
         public List<Person> GetPersons(int offset, int perPage)
         {
             List<Person> persons;
