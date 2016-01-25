@@ -4,26 +4,22 @@ using System.Linq;
 using System.Web;
 using Domain;
 using System.Web.Mvc;
+using Data;
 
 namespace Server.Controllers
 {
     public class LeaderboardController : Controller
     {
-        public List<Person> Persons {
-            get
-            {
-                return new List<Person>
-                {
-                    new Person {Name = "theTrueMikeBrown", Wealth = 100.00M},
-                    new Person {Name = "tehScott", Wealth = 50.00M},
-                    new Person {Name = "mattiam", Wealth = 0.00M}
-                };
-            }
+        public PersonDao Dao { get; set; }
+
+        public LeaderboardController()
+        {
+            Dao = new PersonDao();
         }
 
-        public ActionResult Index()
+        public ActionResult Index(int offset = 0, int perPage = 100)
         {
-            return Json(Persons, JsonRequestBehavior.AllowGet);
+            return Json(Dao.GetPersons(offset, perPage), JsonRequestBehavior.AllowGet);
         }
     }
 }
