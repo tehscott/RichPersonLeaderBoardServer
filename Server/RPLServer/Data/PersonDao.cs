@@ -36,8 +36,8 @@ IF object_id('Payment', 'U') IS NULL
 BEGIN
     CREATE TABLE [dbo].[Payment](
         [PaymentId] [int] NOT NULL PRIMARY KEY IDENTITY,
-    	 [PersonId] [int] NOT NULL FOREIGN KEY REFERENCES Person(PersonId),
-    	 [Amount] [decimal](15,2) NOT NULL,
+        [PersonId] [int] NOT NULL FOREIGN KEY REFERENCES Person(PersonId),
+        [Amount] [decimal](15,2) NOT NULL,
         [InsertDate] [dateTime] NOT NULL CONSTRAINT DF_Payment_InsertDate_GETDATE DEFAULT GETDATE(),
         [UpdateDate] [dateTime] NOT NULL CONSTRAINT DF_Payment_UpdateDate_GETDATE DEFAULT GETDATE()
     )
@@ -97,6 +97,27 @@ BEGIN
 	')
 END
 
+IF (object_id('GetPerson', 'P') IS NULL AND object_id('GetPerson', 'PC') IS NULL)
+BEGIN
+    exec('
+    Create Proc [dbo].GetPerson (
+    	@personId int
+    )
+    AS
+    BEGIN
+    	SET NOCOUNT ON;
+    	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+    
+        SELECT [PersonId], [Name], [Wealth], [InsertDate], [UpdateDate]
+    	FROM Person
+		WHERE PersonId = @personId
+
+		EXEC GetPayments @personId
+		EXEC GetAchievements @personId
+    END
+	')
+END
+
 IF (object_id('GetPayments', 'P') IS NULL AND object_id('GetPayments', 'PC') IS NULL)
 BEGIN    
     exec('
@@ -151,7 +172,8 @@ BEGIN
     	SET NOCOUNT ON;
     	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
 
-        INSERT INTO [dbo].[Person] ([Name], [Wealth]) VALUES (@Name, 0)
+        INSERT INTO [dbo].[Person] ([Name], [Wealth]) VALUES (@Name, 0);
+		SELECT SCOPE_IDENTITY() as PersonId;
     END
 	')
 END
@@ -169,7 +191,8 @@ BEGIN
     	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
     
 	    INSERT INTO [dbo].[Payment] (PersonId,Amount)
-		VALUES (@personId, @amount)		
+		VALUES (@personId, @amount)
+		SELECT SCOPE_IDENTITY() as PaymentId;
 
         UPDATE [dbo].[Person]
         SET Wealth = Wealth + @amount
@@ -197,22 +220,96 @@ END
 ");
             }
         }
-/*
-*/
-        public List<Person> GetPersons(int offset, int perPage)
+        /*
+        */
+        public List<Person> GetPersons(int offset = 0, int perPage = 100)
         {
             List<Person> persons;
             using (DbConnection connection = new SqlConnection(_connectionString))
             {
                 var results =
-                    connection.Query("GetPersons", new { @offset = offset, @perPage = perPage }, commandType: CommandType.StoredProcedure);
+                    connection.Query<Person>("GetPersons", new { @offset = offset, @perPage = perPage }, commandType: CommandType.StoredProcedure);
 
-                persons = results.Select(o => new Person { Name = o.Name, Wealth = o.Wealth })
-                    .ToList();
+                persons = results.ToList();
             }
 
             return persons;
         }
 
+        public Person GetPerson(int personId)
+        {
+            Person person;
+            using (DbConnection connection = new SqlConnection(_connectionString))
+            {
+                var results =
+                    connection.QueryMultiple("GetPerson", new { personId }, commandType: CommandType.StoredProcedure);
+
+                person = results.Read<Person>().FirstOrDefault();
+                if (person != null)
+                {
+                    person.Payments = results.Read<Payment>().ToList();
+                    person.Achievements = results.Read<Achievement>().ToList();
+                }
+            }
+
+            return person;
+        }
+
+        public Person CreatePerson(string name)
+        {
+            Person person = new Person { Name = name };
+            using (DbConnection connection = new SqlConnection(_connectionString))
+            {
+                var results =
+                    connection.Query<int>("CreatePerson", new { name }, commandType: CommandType.StoredProcedure);
+                person.PersonId = results.First();
+            }
+
+            return person;
+        }
+
+        public List<Payment> GetPayments(int personId, int offset = 0, int perPage = int.MaxValue)
+        {
+            List<Payment> payments;
+            using (DbConnection connection = new SqlConnection(_connectionString))
+            {
+                var results =
+                    connection.Query<Payment>("GetPayments", new { personId, offset, perPage }, commandType: CommandType.StoredProcedure);
+
+                payments = results.ToList();
+            }
+
+            return payments;
+        }
+
+        public void CreatePayment(int personId, Decimal amount)
+        {
+            using (DbConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Execute("CreatePayment", new { personId, amount }, commandType: CommandType.StoredProcedure);
+            }
+        }
+
+        public List<Achievement> GetAchievements(int personId)
+        {
+            List<Achievement> achievements;
+            using (DbConnection connection = new SqlConnection(_connectionString))
+            {
+                var results =
+                    connection.Query<Achievement>("GetAchievements", new { personId }, commandType: CommandType.StoredProcedure);
+
+                achievements = results.ToList();
+            }
+
+            return achievements;
+        }
+
+        public void CreateAchievement(int personId, int achievementId)
+        {
+            using (DbConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Execute("CreateAchievement", new { personId, achievementId }, commandType: CommandType.StoredProcedure);
+            }
+        }
     }
 }
