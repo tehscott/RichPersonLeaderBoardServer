@@ -10,7 +10,7 @@ import android.widget.ListView;
 
 import com.mattandmikeandscott.richpersonleaderboard.domain.PeopleQueryType;
 import com.mattandmikeandscott.richpersonleaderboard.domain.Person;
-import com.mattandmikeandscott.richpersonleaderboard.network.Repository;
+import com.mattandmikeandscott.richpersonleaderboard.Network.Repository;
 
 import java.util.ArrayList;
 
@@ -45,8 +45,8 @@ public class MainFragment extends Fragment {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        Repository repository = new Repository();
-                        ArrayList<Person> people = repository.getPeople(PeopleQueryType.AllTime);
+                        Repository repository = new Repository(getResources());
+                        ArrayList<Person> people = repository.getPeople(PeopleQueryType.AllTime, 0, 100);
 
                         ListView list = (ListView) fragment.findViewById(R.id.list);
                         Object[] parameters = new Object[] { getActivity(), list, people };
