@@ -12,11 +12,11 @@ using Domain;
 
 namespace Data
 {
-    public class PersonDao
+    public class Dao : IDao
     {
         private string _connectionString = "Server=tcp:rpldb.database.windows.net,1433;Database=RPLDB;User ID=rpldbAdmin@rpldb;Password=!QAZ2wsx;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;";
 
-        public PersonDao()
+        public Dao()
         {
             using (DbConnection connection = new SqlConnection(_connectionString))
             {
@@ -152,7 +152,7 @@ BEGIN
     	SET NOCOUNT ON;
     	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
     
-        SELECT a.[AchievementId], a.[Name], a.[Description], pa.[InsertDate]
+        SELECT a.[AchievementId] as [AchievementType], a.[Name], a.[Description], pa.[InsertDate]
     	FROM [dbo].[Achievement] a
 		JOIN [dbo].[PersonAchievement] pa ON a.[AchievementId] = pa.[AchievementId]
 		WHERE pa.personId = @personId
@@ -304,11 +304,11 @@ END
             return achievements;
         }
 
-        public void CreateAchievement(int personId, int achievementId)
+        public void CreateAchievement(int personId, AchievementType achievementId)
         {
             using (DbConnection connection = new SqlConnection(_connectionString))
             {
-                connection.Execute("CreateAchievement", new { personId, achievementId }, commandType: CommandType.StoredProcedure);
+                connection.Execute("CreateAchievement", new { personId, @achievementId = (int)achievementId }, commandType: CommandType.StoredProcedure);
             }
         }
     }

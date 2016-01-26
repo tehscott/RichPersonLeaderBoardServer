@@ -86,6 +86,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="Models\CreateAchievementRequest.cs" />
+    <Compile Include="Models\CreatePaymentRequest.cs" />
+    <Compile Include="Models\CreatePersonRequest.cs" />
     <Compile Include="Controllers\LeaderboardController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -105,10 +108,13 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Models\" />
     <Folder Include="Views\Leaderboard\" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Business\Business.csproj">
+      <Project>{AE68F12E-C975-434B-9F4A-6DBA3F9D5484}</Project>
+      <Name>Business</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Data\Data.csproj">
       <Project>{789963C3-6FA7-4F4D-BC31-F164B79B8DE8}</Project>
       <Name>Data</Name>
