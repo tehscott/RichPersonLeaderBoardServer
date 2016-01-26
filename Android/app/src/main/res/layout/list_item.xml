@@ -4,26 +4,35 @@
     android:layout_height="?android:attr/listPreferredItemHeight"
     android:padding="6dip" >
 
-    <TextView android:id="@+id/rank_textview"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
+    <ImageView android:id="@+id/player_avatar"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
         android:layout_centerVertical="true"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="6dp"
         android:layout_marginRight="6dp"
-        android:text="1"
-        android:textColor="@android:color/darker_gray"
-        android:gravity="center"/>
+        android:src="@drawable/avatar_stock"
+        android:scaleType="fitCenter" />
 
     <TextView android:id="@+id/person_name_textview"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
-        android:layout_toLeftOf="@+id/player_avatar"
-        android:layout_toRightOf="@+id/rank_textview"
+        android:layout_toRightOf="@+id/player_avatar"
+        android:layout_toLeftOf="@+id/rank_textview"
         android:gravity="center_vertical"
         android:textStyle="bold"
         android:textColor="@android:color/black"
         android:text="Person Name" />
+
+    <TextView android:id="@+id/person_worth_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="5dp"
+        android:layout_below="@+id/person_name_textview"
+        android:layout_toRightOf="@+id/player_avatar"
+        android:textColor="@android:color/black"
+        android:text="Worth:" />
 
     <TextView android:id="@+id/person_worth_textview"
         android:layout_width="fill_parent"
@@ -31,18 +40,18 @@
         android:layout_alignParentRight="true"
         android:layout_marginLeft="5dp"
         android:layout_below="@+id/person_name_textview"
-        android:layout_toLeftOf="@+id/player_avatar"
-        android:layout_toRightOf="@+id/rank_textview"
+        android:layout_toLeftOf="@+id/rank_textview"
+        android:layout_toRightOf="@+id/person_worth_label"
         android:textColor="@android:color/black"
         android:text="$Worth" />
 
-    <ImageView android:id="@+id/player_avatar"
-        android:layout_width="45dp"
-        android:layout_height="45dp"
-        android:layout_centerVertical="true"
+    <TextView android:id="@+id/rank_textview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
-        android:layout_marginLeft="6dp"
-        android:layout_marginRight="2dp"
-        android:scaleType="fitCenter" />
+        android:layout_alignTop="@+id/player_avatar"
+        android:layout_alignBottom="@+id/player_avatar"
+        android:text="1"
+        android:gravity="center_vertical"/>
 
 </RelativeLayout>

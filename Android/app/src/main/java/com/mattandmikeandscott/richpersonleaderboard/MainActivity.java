@@ -1,6 +1,9 @@
 package com.mattandmikeandscott.richpersonleaderboard;
 
+import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -8,11 +11,26 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+
+import com.mattandmikeandscott.richpersonleaderboard.adapters.PersonListAdapter;
+import com.mattandmikeandscott.richpersonleaderboard.domain.Person;
+
+import java.util.ArrayList;
+
+import static com.mattandmikeandscott.richpersonleaderboard.MainActivity.HandlerResult.*;
 
 public class MainActivity extends ActionBarActivity implements ActionBar.TabListener {
     private SectionsPagerAdapter mSectionsPagerAdapter;
 
     private ViewPager mViewPager;
+
+    public enum HandlerResult {
+        PERSON_INFO_AQUIRED,
+        TOGGLE_LOADING
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -132,7 +150,28 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         //}
     }
 
+    public Handler handler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
 
+            if(msg.what == TOGGLE_LOADING.ordinal()) {
+                boolean isVisible = (boolean) msg.obj;
+
+                LinearLayout progressBar = (LinearLayout) findViewById(R.id.progress_container);
+                progressBar.setVisibility(isVisible ? View.VISIBLE : View.GONE);
+            } else if (msg.what == PERSON_INFO_AQUIRED.ordinal()) {
+                Context context = (Context) ((Object[]) msg.obj)[0];
+                ListView list = (ListView) ((Object[]) msg.obj)[1];
+                ArrayList<Person> people = (ArrayList<Person>) ((Object[]) msg.obj)[2];
+
+                list.setAdapter(new PersonListAdapter(context, people));
+
+                LinearLayout progressBar = (LinearLayout) findViewById(R.id.progress_container);
+                progressBar.setVisibility(View.GONE);
+            }
+        }
+    };
 
 
 
