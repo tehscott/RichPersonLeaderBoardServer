@@ -3,13 +3,13 @@ package com.mattandmikeandscott.richpersonleaderboard.domain;
 public class Person {
     private int id;
     private String name;
-    private double netWorth;
+    private double wealth;
     private int rank;
 
-    public Person(int id, String name, double netWorth, int rank) {
+    public Person(int id, String name, double wealth, int rank) {
         this.id = id;
         this.name = name;
-        this.netWorth = netWorth;
+        this.wealth = wealth;
         this.rank = rank;
     }
 
@@ -29,12 +29,12 @@ public class Person {
         this.name = name;
     }
 
-    public double getNetWorth() {
-        return netWorth;
+    public double getWealth() {
+        return wealth;
     }
 
-    public void setNetWorth(double netWorth) {
-        this.netWorth = netWorth;
+    public void setWealth(double wealth) {
+        this.wealth = wealth;
     }
 
     public int getRank() {

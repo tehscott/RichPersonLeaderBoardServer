@@ -1,7 +1,6 @@
 package com.mattandmikeandscott.richpersonleaderboard.adapters;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,10 +10,12 @@ import android.widget.TextView;
 import com.mattandmikeandscott.richpersonleaderboard.R;
 import com.mattandmikeandscott.richpersonleaderboard.domain.Person;
 
+import java.text.NumberFormat;
 import java.util.List;
 
 public class PersonListAdapter extends BaseAdapter implements View.OnClickListener {
     private Context context;
+    private NumberFormat formatter = NumberFormat.getCurrencyInstance();
 
     List<Person> people;
 
@@ -54,9 +55,9 @@ public class PersonListAdapter extends BaseAdapter implements View.OnClickListen
         TextView gameName = (TextView) convertView.findViewById(R.id.person_name_textview);
         gameName.setText(currentPerson.getName());
 
-        // Person worth
-        TextView gameInfo = (TextView) convertView.findViewById(R.id.person_worth_textview);
-        gameInfo.setText(String.valueOf(currentPerson.getNetWorth()));
+        // Person wealth
+        TextView gameInfo = (TextView) convertView.findViewById(R.id.person_wealth_textview);
+        gameInfo.setText(formatter.format(currentPerson.getWealth()));
 
         // Person avatar
 
