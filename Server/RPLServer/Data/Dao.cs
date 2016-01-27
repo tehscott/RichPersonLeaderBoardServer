@@ -27,6 +27,7 @@ BEGIN
         [PersonId] [int] NOT NULL PRIMARY KEY IDENTITY,
         [Name] [varchar](128) NOT NULL,
         [Wealth] [decimal](15, 2) NOT NULL,
+        [Rank] [int] NOT NULL CONSTRAINT DF_Person_Rank DEFAULT ((0)),
         [InsertDate] [dateTime] NOT NULL CONSTRAINT DF_Person_InsertDate_GETDATE DEFAULT GETDATE(),
         [UpdateDate] [dateTime] NOT NULL CONSTRAINT DF_Person_UpdateDate_GETDATE DEFAULT GETDATE()
     )
@@ -89,9 +90,9 @@ BEGIN
     	SET NOCOUNT ON;
     	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
     
-        SELECT [PersonId], [Name], [Wealth], [InsertDate], [UpdateDate]
+        SELECT [PersonId], [Name], [Wealth], [Rank], [InsertDate], [UpdateDate]
     	FROM Person
-    	ORDER BY Wealth DESC
+    	ORDER BY [Rank] DESC
     	OFFSET @offset ROWS FETCH NEXT @perPage ROWS ONLY
     END
 	')
@@ -108,7 +109,7 @@ BEGIN
     	SET NOCOUNT ON;
     	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
     
-        SELECT [PersonId], [Name], [Wealth], [InsertDate], [UpdateDate]
+        SELECT [PersonId], [Name], [Wealth], [Rank], [InsertDate], [UpdateDate]
     	FROM Person
 		WHERE PersonId = @personId
 
@@ -135,12 +136,7 @@ BEGIN
     	FROM Person
 		WHERE Name = @name
 
-        SELECT [PersonId], [Name], [Wealth], [InsertDate], [UpdateDate]
-    	FROM Person
-		WHERE [PersonId] = @personId
-
-		EXEC GetPayments @personId
-		EXEC GetAchievements @personId
+		EXEC GetPerson @personId
     END
 	')
 END
@@ -188,6 +184,55 @@ BEGIN
 	')
 END
 
+IF (object_id('SetRank', 'P') IS NULL AND object_id('SetRank', 'PC') IS NULL)
+BEGIN    
+    exec('
+    Create Proc [dbo].SetRank(
+    	@personId int
+    )
+    AS
+    BEGIN
+    	SET NOCOUNT ON;
+    	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+
+        DECLARE @rankings table(PersonId INT, [Rank] INT); 
+
+        INSERT INTO @rankings
+		SELECT [PersonId], RANK() OVER (ORDER BY [Wealth] DESC) as [Rank]
+    	FROM Person;
+		
+		UPDATE [Dbo].[Person]
+		SET [Person].[Rank] = r.[Rank]
+		FROM @rankings r
+		WHERE Person.PersonId = @personId
+		AND r.PersonId = @personId; 
+    END
+	')
+END
+
+IF (object_id('SetRanks', 'P') IS NULL AND object_id('SetRanks', 'PC') IS NULL)
+BEGIN    
+    exec('
+    Create Proc [dbo].SetRanks
+    AS
+    BEGIN
+    	SET NOCOUNT ON;
+    	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+
+        DECLARE @rankings table(PersonId INT, [Rank] INT); 
+
+        INSERT INTO @rankings
+		SELECT [PersonId], RANK() OVER (ORDER BY [Wealth] DESC) as [Rank]
+    	FROM Person;
+		
+		UPDATE [Dbo].[Person]
+		SET [Person].[Rank] = r.[Rank]
+		FROM @rankings r
+		WHERE Person.PersonId = r.PersonId; 
+    END
+	')
+END
+
 IF (object_id('CreatePerson', 'P') IS NULL AND object_id('CreatePerson', 'PC') IS NULL)
 BEGIN
     exec('
@@ -200,6 +245,7 @@ BEGIN
     	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
 
         INSERT INTO [dbo].[Person] ([Name], [Wealth]) VALUES (@Name, 0);
+
 		SELECT SCOPE_IDENTITY() as PersonId;
     END
 	')
@@ -308,6 +354,7 @@ END
                 var results =
                     connection.Query<int>("CreatePerson", new { name }, commandType: CommandType.StoredProcedure);
                 person.PersonId = results.First();
+                SetRanks();
             }
 
             return person;
@@ -332,6 +379,7 @@ END
             using (DbConnection connection = new SqlConnection(_connectionString))
             {
                 connection.Execute("CreatePayment", new { personId, amount }, commandType: CommandType.StoredProcedure);
+                SetRanks();
             }
         }
 
@@ -354,6 +402,21 @@ END
             using (DbConnection connection = new SqlConnection(_connectionString))
             {
                 connection.Execute("CreateAchievement", new { personId, @achievementId = (int)achievementId }, commandType: CommandType.StoredProcedure);
+            }
+        }
+
+        public void SetRank(int personId)
+        {
+            using (DbConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Execute("SetRank", new { personId }, commandType: CommandType.StoredProcedure);
+            }
+        }
+        public void SetRanks()
+        {
+            using (DbConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Execute("SetRanks", new { }, commandType: CommandType.StoredProcedure);
             }
         }
     }

@@ -44,11 +44,57 @@ namespace Business
 
         public void CreatePayment(int personId, Decimal amount)
         {
-            //TODO: insert logic to generate achievements here
             Dao.CreatePayment(personId, amount);
 
             var person = Dao.GetPerson(personId);
-
+            if (person.Rank >= 1 && person.Rank <= 1)
+            {
+                CreateAchievement(personId, AchievementType.Richest);
+            }
+            if (person.Rank >= 2 && person.Rank <= 1)
+            {
+                CreateAchievement(personId, AchievementType.SecondRichest);
+            }
+            if (person.Rank >= 3 && person.Rank <= 1)
+            {
+                CreateAchievement(personId, AchievementType.ThirdRichest);
+            }
+            if (person.Rank >= 5 && person.Rank <= 1)
+            {
+                CreateAchievement(personId, AchievementType.FifthRichest);
+            }
+            if (person.Rank >= 10 && person.Rank <= 1)
+            {
+                CreateAchievement(personId, AchievementType.TenthRichest);
+            }
+            if (person.Rank >= 100 && person.Rank <= 1)
+            {
+                CreateAchievement(personId, AchievementType.OneHundrethRichest);
+            }
+            if (person.Payments.Count(payment => payment.InsertDate > DateTime.Today) >= 5)
+            {
+                CreateAchievement(personId, AchievementType.FiveADay);
+            }
+            if (person.Payments.Count(payment => payment.InsertDate > DateTime.Today) >= 10)
+            {
+                CreateAchievement(personId, AchievementType.TenADay);
+            }
+            if (person.Payments.Count(payment => payment.InsertDate > DateTime.Today) >= 100)
+            {
+                CreateAchievement(personId, AchievementType.OneHundredADay);
+            }
+            if (amount >= 10)
+            {
+                CreateAchievement(personId, AchievementType.TenSpender);
+            }
+            if (amount >= 100)
+            {
+                CreateAchievement(personId, AchievementType.OneHundredSpender);
+            }
+            if (amount >= 1000)
+            {
+                CreateAchievement(personId, AchievementType.OneThousandSpender);
+            }
         }
 
         public List<Achievement> GetAchievements(int personId)
