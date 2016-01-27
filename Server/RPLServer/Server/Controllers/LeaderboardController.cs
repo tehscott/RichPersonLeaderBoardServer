@@ -30,6 +30,12 @@ namespace Server.Controllers
             return Json(Business.GetPerson(id), JsonRequestBehavior.AllowGet);
         }
 
+        [HttpGet]
+        public ActionResult PersonByName(string name)
+        {
+            return Json(Business.GetPerson(name), JsonRequestBehavior.AllowGet);
+        }
+
         [HttpPost]
         public ActionResult Person(CreatePersonRequest request)
         {
@@ -37,9 +43,9 @@ namespace Server.Controllers
         }
 
         [HttpGet]
-        public ActionResult Payments(int id, int offset = 0, int perPage = int.MaxValue)
+        public ActionResult Payments(int id)
         {
-            return Json(Business.GetPayments(id, offset, perPage), JsonRequestBehavior.AllowGet);
+            return Json(Business.GetPayments(id), JsonRequestBehavior.AllowGet);
         }
 
         [HttpPost]
@@ -58,6 +64,12 @@ namespace Server.Controllers
         public void Achievements(CreateAchievementRequest request)
         {
             Business.CreateAchievement(request.PersonId, request.AchievementType);
+        }
+
+        [HttpGet]
+        public ActionResult GetPersonAndSurroundingPeople(int id, int range = 5)
+        {
+            return Json(Business.GetPersonAndSurroundingPeople(id, range), JsonRequestBehavior.AllowGet);
         }
     }
 }

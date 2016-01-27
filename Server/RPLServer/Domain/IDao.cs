@@ -7,10 +7,12 @@ namespace Domain
     {
         List<Person> GetPersons(int offset = 0, int perPage = 100);
         Person GetPerson(int personId);
+        Person GetPerson(string name);
         Person CreatePerson(string name);
-        List<Payment> GetPayments(int personId, int offset = 0, int perPage = int.MaxValue);
+        List<Payment> GetPayments(int personId);
         void CreatePayment(int personId, Decimal amount);
         List<Achievement> GetAchievements(int personId);
         void CreateAchievement(int personId, AchievementType achievementType);
+        List<Person> GetPersonAndSurroundingPeople(int personId, int range);
     }
 }
