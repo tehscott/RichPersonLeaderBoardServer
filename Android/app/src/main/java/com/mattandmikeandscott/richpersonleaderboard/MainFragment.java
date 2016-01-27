@@ -3,6 +3,7 @@ package com.mattandmikeandscott.richpersonleaderboard;
 import android.os.Bundle;
 import android.os.Message;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,51 +30,63 @@ public class MainFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, final ViewGroup container, Bundle savedInstanceState) {
-        View rootView = null;
+        View listLayout = null;
         int sectionNumber = getArguments().getInt(ARG_SECTION_NUMBER);
 
         switch (sectionNumber) {
             case 0:
-                rootView = inflater.inflate(R.layout.fragment_list, container, false);
-
-                Message message = new Message();
-                message.obj = true;
-                message.what = MainActivity.HandlerResult.TOGGLE_LOADING.ordinal();
-                ((MainActivity)getActivity()).handler.sendMessage(message);
-
-                final View fragment = rootView;
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Repository repository = new Repository();
-                        ArrayList<Person> people = repository.getPeople(PeopleQueryType.AllTime);
-
-                        ListView list = (ListView) fragment.findViewById(R.id.list);
-                        Object[] parameters = new Object[] { getActivity(), list, people };
-
-                        Message message = new Message();
-                        message.what = MainActivity.HandlerResult.PERSON_INFO_AQUIRED.ordinal();
-                        message.obj = parameters;
-
-                        ((MainActivity)getActivity()).handler.sendMessage(message);
-                    }
-                }).start();
+                listLayout = inflater.inflate(R.layout.fragment_list, container, false);
+                refreshListAsync(listLayout, PeopleQueryType.AllTime, 0, 100);
+                setupSwipeLayout(listLayout, PeopleQueryType.AllTime, 0, 100);
 
                 break;
             case 1:
-                rootView = inflater.inflate(R.layout.fragment_list, container, false);
+                listLayout = inflater.inflate(R.layout.fragment_list, container, false);
                 break;
             case 2:
-                rootView = inflater.inflate(R.layout.fragment_list, container, false);
+                listLayout = inflater.inflate(R.layout.fragment_list, container, false);
                 break;
             case 3:
-                rootView = inflater.inflate(R.layout.fragment_list, container, false);
+                listLayout = inflater.inflate(R.layout.fragment_list, container, false);
                 break;
             case 4:
-                rootView = inflater.inflate(R.layout.fragment_list, container, false);
+                listLayout = inflater.inflate(R.layout.fragment_list, container, false);
                 break;
         }
 
-        return rootView;
+        return listLayout;
+    }
+
+    private void refreshListAsync(final View listLayout, final PeopleQueryType queryType, final int offset, final int peoplePerPage) {
+        final SwipeRefreshLayout swipeLayout = (SwipeRefreshLayout) listLayout.findViewById(R.id.list_container);
+        swipeLayout.setRefreshing(true);
+        swipeLayout.setEnabled(false);
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Repository repository = new Repository(getResources());
+                ArrayList<Person> people = repository.getPeople(queryType, offset, peoplePerPage);
+
+                ListView list = (ListView) listLayout.findViewById(R.id.list);
+                Object[] parameters = new Object[] { getActivity(), list, people };
+
+                Message message = new Message();
+                message.what = MainActivity.HandlerResult.PERSON_INFO_AQUIRED.ordinal();
+                message.obj = parameters;
+
+                ((MainActivity)getActivity()).handler.sendMessage(message);
+            }
+        }).start();
+    }
+
+    private void setupSwipeLayout(final View listLayout, final PeopleQueryType queryType, final int offset, final int peoplePerPage) {
+        final SwipeRefreshLayout swipeLayout = (SwipeRefreshLayout) listLayout.findViewById(R.id.list_container);
+        swipeLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshListAsync(listLayout, PeopleQueryType.AllTime, 0, 100);
+            }
+        });
     }
 }

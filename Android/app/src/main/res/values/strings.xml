@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Rich Person Leader Board</string>
+    <string name="app_short_name">RPLB</string>
 </resources>
