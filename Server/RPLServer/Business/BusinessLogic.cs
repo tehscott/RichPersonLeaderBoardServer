@@ -47,53 +47,53 @@ namespace Business
             Dao.CreatePayment(personId, amount);
 
             var person = Dao.GetPerson(personId);
-            if (person.Rank >= 1 && person.Rank <= 1)
+            if (person.Rank <= 1 && person.Rank >= 1)
             {
-                CreateAchievement(personId, AchievementType.Richest);
+                CreateAchievement(person, AchievementType.Richest);
             }
-            if (person.Rank >= 2 && person.Rank <= 1)
+            if (person.Rank <= 2 && person.Rank >= 1)
             {
-                CreateAchievement(personId, AchievementType.SecondRichest);
+                CreateAchievement(person, AchievementType.SecondRichest);
             }
-            if (person.Rank >= 3 && person.Rank <= 1)
+            if (person.Rank <= 3 && person.Rank >= 1)
             {
-                CreateAchievement(personId, AchievementType.ThirdRichest);
+                CreateAchievement(person, AchievementType.ThirdRichest);
             }
-            if (person.Rank >= 5 && person.Rank <= 1)
+            if (person.Rank <= 5 && person.Rank >= 1)
             {
-                CreateAchievement(personId, AchievementType.FifthRichest);
+                CreateAchievement(person, AchievementType.FifthRichest);
             }
-            if (person.Rank >= 10 && person.Rank <= 1)
+            if (person.Rank <= 10 && person.Rank >= 1)
             {
-                CreateAchievement(personId, AchievementType.TenthRichest);
+                CreateAchievement(person, AchievementType.TenthRichest);
             }
-            if (person.Rank >= 100 && person.Rank <= 1)
+            if (person.Rank <= 100 && person.Rank >= 1)
             {
-                CreateAchievement(personId, AchievementType.OneHundrethRichest);
+                CreateAchievement(person, AchievementType.OneHundrethRichest);
             }
             if (person.Payments.Count(payment => payment.InsertDate > DateTime.Today) >= 5)
             {
-                CreateAchievement(personId, AchievementType.FiveADay);
+                CreateAchievement(person, AchievementType.FiveADay);
             }
             if (person.Payments.Count(payment => payment.InsertDate > DateTime.Today) >= 10)
             {
-                CreateAchievement(personId, AchievementType.TenADay);
+                CreateAchievement(person, AchievementType.TenADay);
             }
             if (person.Payments.Count(payment => payment.InsertDate > DateTime.Today) >= 100)
             {
-                CreateAchievement(personId, AchievementType.OneHundredADay);
+                CreateAchievement(person, AchievementType.OneHundredADay);
             }
             if (amount >= 10)
             {
-                CreateAchievement(personId, AchievementType.TenSpender);
+                CreateAchievement(person, AchievementType.TenSpender);
             }
             if (amount >= 100)
             {
-                CreateAchievement(personId, AchievementType.OneHundredSpender);
+                CreateAchievement(person, AchievementType.OneHundredSpender);
             }
             if (amount >= 1000)
             {
-                CreateAchievement(personId, AchievementType.OneThousandSpender);
+                CreateAchievement(person, AchievementType.OneThousandSpender);
             }
         }
 
@@ -104,7 +104,15 @@ namespace Business
 
         public void CreateAchievement(int personId, AchievementType achievementType)
         {
-            Dao.CreateAchievement(personId, achievementType);
+            CreateAchievement(Dao.GetPerson(personId), achievementType);
+        }
+
+        public void CreateAchievement(Person person, AchievementType achievementType)
+        {
+            if (person.Achievements.All(achievement => achievement.AchievementType != achievementType))
+            {
+                Dao.CreateAchievement(person.PersonId, achievementType);
+            }
         }
     }
 }
