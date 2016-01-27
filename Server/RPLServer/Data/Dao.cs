@@ -27,7 +27,7 @@ IF object_id('Person', 'U') IS NULL
 BEGIN
     CREATE TABLE [dbo].[Person](
         [PersonId] [int] NOT NULL PRIMARY KEY IDENTITY,
-        [Name] [varchar](128) NOT NULL,
+        [Name] [varchar](128) NOT NULL UNIQUE,
         [Wealth] [decimal](15, 2) NOT NULL,
         [Rank] [int] NOT NULL CONSTRAINT DF_Person_Rank DEFAULT ((0)),
         [InsertDate] [dateTime] NOT NULL CONSTRAINT DF_Person_InsertDate_GETDATE DEFAULT GETDATE(),
