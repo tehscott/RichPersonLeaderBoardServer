@@ -21,6 +21,8 @@ namespace Data
             using (DbConnection connection = new SqlConnection(_connectionString))
             {
                 connection.Execute(@"
+USE RPLDB;
+
 IF object_id('Person', 'U') IS NULL
 BEGIN
     CREATE TABLE [dbo].[Person](
@@ -98,10 +100,46 @@ BEGIN
 	')
 END
 
+IF (object_id('GetPersonAndSurroundingPeople', 'P') IS NULL AND object_id('GetPersonAndSurroundingPeople', 'PC') IS NULL)
+BEGIN
+    exec('
+    CREATE Proc [dbo].GetPersonAndSurroundingPeople (
+        @personId int,
+        @range int = 5
+    )
+    AS
+    BEGIN
+    	SET NOCOUNT ON;
+    	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+            
+        DECLARE @numberedPerson table(PersonId INT, [RowNumber] INT); 
+        INSERT INTO @numberedPerson
+        SELECT [PersonId], ROW_NUMBER() OVER (ORDER BY [Rank] DESC) AS [RowNumber]
+        FROM Person;
+        
+        DECLARE @from int;
+        SELECT @from = np.RowNumber - @range
+        FROM @numberedPerson np
+        WHERE np.[PersonId] = @personId
+        
+        DECLARE @to int;
+        SELECT @to = np.RowNumber + @range
+        FROM @numberedPerson np
+        WHERE np.[PersonId] = @personId
+        
+        SELECT p.[PersonId], p.[Name], p.[Wealth], p.[Rank], p.[InsertDate], p.[UpdateDate]
+        FROM Person p
+        JOIN @numberedPerson np ON np.[PersonId] = p.[PersonId]
+        WHERE np.RowNumber BETWEEN @from AND @to
+        ORDER BY [Rank] ASC
+    END
+	')
+END
+
 IF (object_id('GetPerson', 'P') IS NULL AND object_id('GetPerson', 'PC') IS NULL)
 BEGIN
     exec('
-    Create Proc [dbo].GetPerson (
+    CREATE Proc [dbo].GetPerson (
     	@personId int
     )
     AS
@@ -360,13 +398,13 @@ END
             return person;
         }
 
-        public List<Payment> GetPayments(int personId, int offset = 0, int perPage = int.MaxValue)
+        public List<Payment> GetPayments(int personId)
         {
             List<Payment> payments;
             using (DbConnection connection = new SqlConnection(_connectionString))
             {
                 var results =
-                    connection.Query<Payment>("GetPayments", new { personId, offset, perPage }, commandType: CommandType.StoredProcedure);
+                    connection.Query<Payment>("GetPayments", new { personId }, commandType: CommandType.StoredProcedure);
 
                 payments = results.ToList();
             }
@@ -402,6 +440,16 @@ END
             using (DbConnection connection = new SqlConnection(_connectionString))
             {
                 connection.Execute("CreateAchievement", new { personId, @achievementId = (int)achievementId }, commandType: CommandType.StoredProcedure);
+            }
+        }
+
+        public List<Person> GetPersonAndSurroundingPeople(int personId, int range)
+        {
+            using (DbConnection connection = new SqlConnection(_connectionString))
+            {
+                var results = connection.Query<Person>("GetPersonAndSurroundingPeople", new { personId, range }, commandType: CommandType.StoredProcedure);
+
+                return results.ToList();
             }
         }
 

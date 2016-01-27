@@ -32,9 +32,9 @@ namespace Business
             return Dao.CreatePerson(name);
         }
 
-        public List<Payment> GetPayments(int personId, int offset = 0, int perPage = int.MaxValue)
+        public List<Payment> GetPayments(int personId)
         {
-            return Dao.GetPayments(personId, offset, perPage);
+            return Dao.GetPayments(personId);
         }
 
         public Person GetPerson(string name)
@@ -113,6 +113,11 @@ namespace Business
             {
                 Dao.CreateAchievement(person.PersonId, achievementType);
             }
+        }
+
+        public List<Person> GetPersonAndSurroundingPeople(int personId, int range)
+        {
+            return Dao.GetPersonAndSurroundingPeople(personId, range);
         }
     }
 }
