@@ -1,4 +1,4 @@
-package com.mattandmikeandscott.richpersonleaderboard.Network;
+package com.mattandmikeandscott.richpersonleaderboard.network;
 
 import android.content.res.Resources;
 import android.util.Log;
