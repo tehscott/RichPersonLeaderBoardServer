@@ -30,6 +30,12 @@ namespace Server.Controllers
             return Json(Business.GetPerson(id), JsonRequestBehavior.AllowGet);
         }
 
+        [HttpGet]
+        public ActionResult PersonByName(string name)
+        {
+            return Json(Business.GetPerson(name), JsonRequestBehavior.AllowGet);
+        }
+
         [HttpPost]
         public ActionResult Person(CreatePersonRequest request)
         {

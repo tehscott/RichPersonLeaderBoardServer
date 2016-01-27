@@ -37,10 +37,18 @@ namespace Business
             return Dao.GetPayments(personId, offset, perPage);
         }
 
+        public Person GetPerson(string name)
+        {
+            return Dao.GetPerson(name);
+        }
+
         public void CreatePayment(int personId, Decimal amount)
         {
             //TODO: insert logic to generate achievements here
             Dao.CreatePayment(personId, amount);
+
+            var person = Dao.GetPerson(personId);
+
         }
 
         public List<Achievement> GetAchievements(int personId)

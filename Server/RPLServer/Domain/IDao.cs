@@ -7,6 +7,7 @@ namespace Domain
     {
         List<Person> GetPersons(int offset = 0, int perPage = 100);
         Person GetPerson(int personId);
+        Person GetPerson(string name);
         Person CreatePerson(string name);
         List<Payment> GetPayments(int personId, int offset = 0, int perPage = int.MaxValue);
         void CreatePayment(int personId, Decimal amount);

@@ -118,6 +118,33 @@ BEGIN
 	')
 END
 
+IF (object_id('GetPersonByName', 'P') IS NULL AND object_id('GetPersonByName', 'PC') IS NULL)
+BEGIN
+    exec('
+    Create Proc [dbo].GetPersonByName (
+    	@name varchar(128)
+    )
+    AS
+    BEGIN
+    	SET NOCOUNT ON;
+    	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+    
+        declare @personId int;
+
+        SELECT @personId = [PersonId]
+    	FROM Person
+		WHERE Name = @name
+
+        SELECT [PersonId], [Name], [Wealth], [InsertDate], [UpdateDate]
+    	FROM Person
+		WHERE [PersonId] = @personId
+
+		EXEC GetPayments @personId
+		EXEC GetAchievements @personId
+    END
+	')
+END
+
 IF (object_id('GetPayments', 'P') IS NULL AND object_id('GetPayments', 'PC') IS NULL)
 BEGIN    
     exec('
@@ -243,6 +270,24 @@ END
             {
                 var results =
                     connection.QueryMultiple("GetPerson", new { personId }, commandType: CommandType.StoredProcedure);
+
+                person = results.Read<Person>().FirstOrDefault();
+                if (person != null)
+                {
+                    person.Payments = results.Read<Payment>().ToList();
+                    person.Achievements = results.Read<Achievement>().ToList();
+                }
+            }
+
+            return person;
+        }
+        public Person GetPerson(string name)
+        {
+            Person person;
+            using (DbConnection connection = new SqlConnection(_connectionString))
+            {
+                var results =
+                    connection.QueryMultiple("GetPersonByName", new { name }, commandType: CommandType.StoredProcedure);
 
                 person = results.Read<Person>().FirstOrDefault();
                 if (person != null)
