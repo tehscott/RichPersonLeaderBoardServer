@@ -52,7 +52,7 @@ public class Repository {
             for(int i = 0; i < peopleData.length(); i++) {
                 JSONObject jsonObject = peopleData.getJSONObject(i);
 
-                people.add(new Person(jsonObject.getInt("PersonId"), jsonObject.getString("Name"), jsonObject.getDouble("Wealth"), i));
+                people.add(new Person(jsonObject.getInt("PersonId"), jsonObject.getString("Name"), jsonObject.getDouble("Wealth"), jsonObject.getInt("Rank")));
             }
         } catch(JSONException e) {
             Log.e(resources.getString(R.string.app_short_name), "Error parsing JSON data " + e.toString());
