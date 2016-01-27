@@ -15,7 +15,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,37 +25,34 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Map;
 
 public class Repository {
     private Resources resources;
+    private String endpoint = "http://richpersonleaderboardserver.azurewebsites.net";
 
     public Repository(Resources resources) {
         this.resources = resources;
     }
 
-    public ArrayList<Person> getPeople(PeopleQueryType peopleQueryType, int offset, int perPage) {
-        String endpoint = "http://richpersonleaderboardserver.azurewebsites.net";
-
+    public ArrayList<Person> getPeople(PeopleQueryType peopleQueryType, Map<String, Integer> parameters) {
         if(peopleQueryType == PeopleQueryType.AllTime) {
             endpoint += "/api/persons";
+        } else if(peopleQueryType == PeopleQueryType.Myself) {
+            endpoint += "/api/GetPersonAndSurroundingPeople";
         } else {
             throw new IllegalArgumentException("Invalid endpoint for getPeople()!");
         }
 
-        List<String> parameterNames = Arrays.asList("offset", "perpage");
-        List<String> parameterValues = Arrays.asList(String.valueOf(offset), String.valueOf(perPage));
-
         ArrayList<Person> people = new ArrayList<>();
 
-        JSONArray peopleData = doGetRequest(endpoint, parameterNames, parameterValues);
+        JSONArray peopleData = doGetRequest(endpoint, paramListToString(parameters));
 
         try {
             for(int i = 0; i < peopleData.length(); i++) {
                 JSONObject jsonObject = peopleData.getJSONObject(i);
 
-                people.add(new Person(jsonObject.getInt("PersonId"), jsonObject.getString("Name"), jsonObject.getDouble("Wealth"), i));
+                people.add(new Person(jsonObject.getInt("PersonId"), jsonObject.getString("Name"), jsonObject.getDouble("Wealth"), jsonObject.getInt("Rank")));
             }
         } catch(JSONException e) {
             Log.e(resources.getString(R.string.app_short_name), "Error parsing JSON data " + e.toString());
@@ -66,11 +62,11 @@ public class Repository {
         return people;
     }
 
-    private JSONArray doGetRequest(String endpoint, List<String> parameterNames, List<String> parameterValues) {
+    private JSONArray doGetRequest(String endpoint, String parameters) {
         JSONArray jArray = new JSONArray();
 
         try {
-            HttpGet httpGet = new HttpGet(endpoint + "?" + paramListToString(parameterNames, parameterValues));
+            HttpGet httpGet = new HttpGet(endpoint + "?" + parameters);
 
             jArray = doRequest(httpGet);
         } catch(Exception e) {
@@ -141,15 +137,11 @@ public class Repository {
         return jArray;
     }
 
-    private String paramListToString(List<String> parameterNames, List<String> parameterValues) {
-        if(parameterNames.size() != parameterValues.size()) {
-            throw new IllegalArgumentException("Parameter name and value array length does not match!");
-        }
-
+    private String paramListToString(Map<String, Integer> parameters) {
         String listAsString = "";
 
-        for(int i = 0; i < parameterNames.size(); i++) {
-            listAsString += parameterNames.get(i) + "=" + parameterValues.get(i) + "&"; // a trailing & is ok
+        for(String parameter : parameters.keySet()) {
+            listAsString += parameter + "=" + parameters.get(parameter) + "&"; // a trailing & is ok
         }
 
         return listAsString;

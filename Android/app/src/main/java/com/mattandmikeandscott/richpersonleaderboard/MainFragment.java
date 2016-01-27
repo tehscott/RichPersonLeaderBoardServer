@@ -14,6 +14,8 @@ import com.mattandmikeandscott.richpersonleaderboard.domain.Person;
 import com.mattandmikeandscott.richpersonleaderboard.network.Repository;
 
 import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.Map;
 
 public class MainFragment extends Fragment {
     private static final String ARG_SECTION_NUMBER = "section_number";
@@ -36,8 +38,14 @@ public class MainFragment extends Fragment {
         switch (sectionNumber) {
             case 0:
                 listLayout = inflater.inflate(R.layout.fragment_list, container, false);
-                refreshListAsync(listLayout, PeopleQueryType.AllTime, 0, 100);
-                setupSwipeLayout(listLayout, PeopleQueryType.AllTime, 0, 100);
+
+                Map<String, Integer> parameters = new Hashtable<>();
+                parameters.put("offset", 0);
+                parameters.put("perpage", 100);
+
+                refreshListAsync(listLayout, PeopleQueryType.AllTime, parameters);
+                setupSwipeLayout(listLayout, PeopleQueryType.AllTime, parameters);
+                setupButtons(listLayout);
 
                 break;
             case 1:
@@ -57,7 +65,7 @@ public class MainFragment extends Fragment {
         return listLayout;
     }
 
-    private void refreshListAsync(final View listLayout, final PeopleQueryType queryType, final int offset, final int peoplePerPage) {
+    private void refreshListAsync(final View listLayout, final PeopleQueryType queryType, final Map<String, Integer> parameters) {
         final SwipeRefreshLayout swipeLayout = (SwipeRefreshLayout) listLayout.findViewById(R.id.list_container);
         swipeLayout.setRefreshing(true);
         swipeLayout.setEnabled(false);
@@ -66,7 +74,7 @@ public class MainFragment extends Fragment {
             @Override
             public void run() {
                 Repository repository = new Repository(getResources());
-                ArrayList<Person> people = repository.getPeople(queryType, offset, peoplePerPage);
+                ArrayList<Person> people = repository.getPeople(queryType, parameters);
 
                 ListView list = (ListView) listLayout.findViewById(R.id.list);
                 Object[] parameters = new Object[] { getActivity(), list, people };
@@ -80,12 +88,25 @@ public class MainFragment extends Fragment {
         }).start();
     }
 
-    private void setupSwipeLayout(final View listLayout, final PeopleQueryType queryType, final int offset, final int peoplePerPage) {
+    private void setupSwipeLayout(final View listLayout, final PeopleQueryType queryType, final Map<String, Integer> parameters) {
         final SwipeRefreshLayout swipeLayout = (SwipeRefreshLayout) listLayout.findViewById(R.id.list_container);
         swipeLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                refreshListAsync(listLayout, PeopleQueryType.AllTime, 0, 100);
+                refreshListAsync(listLayout, PeopleQueryType.AllTime, parameters);
+            }
+        });
+    }
+
+    private void setupButtons(final View listLayout) {
+        listLayout.findViewById(R.id.find_me_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Map<String, Integer> parameters = new Hashtable<String, Integer>();
+                parameters.put("id", 8);
+                parameters.put("range", 5);
+
+                refreshListAsync(listLayout, PeopleQueryType.Myself, parameters);
             }
         });
     }
