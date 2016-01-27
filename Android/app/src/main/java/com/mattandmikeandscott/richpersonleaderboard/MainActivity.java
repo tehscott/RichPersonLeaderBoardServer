@@ -15,7 +15,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 
-import com.mattandmikeandscott.richpersonleaderboard.adapters.PersonListAdapter;
+import com.mattandmikeandscott.richpersonleaderboard.Adapters.PersonListAdapter;
 import com.mattandmikeandscott.richpersonleaderboard.domain.Person;
 
 import java.util.ArrayList;

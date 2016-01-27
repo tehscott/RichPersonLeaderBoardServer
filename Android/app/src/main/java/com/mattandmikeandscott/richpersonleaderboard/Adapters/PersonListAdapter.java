@@ -1,4 +1,4 @@
-package com.mattandmikeandscott.richpersonleaderboard.adapters;
+package com.mattandmikeandscott.richpersonleaderboard.Adapters;
 
 import android.content.Context;
 import android.view.LayoutInflater;
