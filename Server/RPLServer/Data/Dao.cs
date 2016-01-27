@@ -83,7 +83,7 @@ END
 IF (object_id('GetPersons', 'P') IS NULL AND object_id('GetPersons', 'PC') IS NULL)
 BEGIN
     exec('
-    Create Proc [dbo].GetPersons (
+    CREATE Proc [dbo].GetPersons (
         @offset int = 0,
         @perPage int = 100
     )
@@ -94,7 +94,7 @@ BEGIN
     
         SELECT [PersonId], [Name], [Wealth], [Rank], [InsertDate], [UpdateDate]
     	FROM Person
-    	ORDER BY [Rank] DESC
+    	ORDER BY [Rank] ASC
     	OFFSET @offset ROWS FETCH NEXT @perPage ROWS ONLY
     END
 	')
@@ -114,7 +114,7 @@ BEGIN
             
         DECLARE @numberedPerson table(PersonId INT, [RowNumber] INT); 
         INSERT INTO @numberedPerson
-        SELECT [PersonId], ROW_NUMBER() OVER (ORDER BY [Rank] DESC) AS [RowNumber]
+        SELECT [PersonId], ROW_NUMBER() OVER (ORDER BY [Rank] ASC) AS [RowNumber]
         FROM Person;
         
         DECLARE @from int;
