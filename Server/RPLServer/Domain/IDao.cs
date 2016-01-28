@@ -5,7 +5,8 @@ namespace Domain
 {
     public interface IDao
     {
-        List<Person> GetPersons(int offset = 0, int perPage = 100);
+        List<Person> GetPersons(int offset = 0, int perPage = 100, RankType rankType = RankType.AllTime);
+        List<Person> GetPersonAndSurroundingPeople(int personId, int range, RankType rankType = RankType.AllTime);
         Person GetPerson(int personId);
         Person GetPerson(string name);
         Person CreatePerson(string name);
@@ -13,6 +14,5 @@ namespace Domain
         void CreatePayment(int personId, Decimal amount);
         List<Achievement> GetAchievements(int personId);
         void CreateAchievement(int personId, AchievementType achievementType);
-        List<Person> GetPersonAndSurroundingPeople(int personId, int range);
     }
 }
