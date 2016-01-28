@@ -28,8 +28,6 @@ BEGIN
     CREATE TABLE [dbo].[Person](
         [PersonId] [int] NOT NULL PRIMARY KEY IDENTITY,
         [Name] [varchar](128) NOT NULL UNIQUE,
-        [Wealth] [decimal](15, 2) NOT NULL,
-        [Rank] [int] NOT NULL CONSTRAINT DF_Person_Rank DEFAULT ((0)),
         [InsertDate] [dateTime] NOT NULL CONSTRAINT DF_Person_InsertDate_GETDATE DEFAULT GETDATE(),
         [UpdateDate] [dateTime] NOT NULL CONSTRAINT DF_Person_UpdateDate_GETDATE DEFAULT GETDATE()
     )
@@ -38,9 +36,14 @@ END
 IF object_id('RankType', 'U') IS NULL
 BEGIN
 	create table RankType(
-		[RankTypeId] [int] NOT NULL PRIMARY KEY IDENTITY,
+		[RankTypeId] [int] NOT NULL PRIMARY KEY,
 		Name varchar(256)
 	)
+    INSERT INTO RankType ([RankTypeId], Name) values (1, 'All Time')
+    INSERT INTO RankType ([RankTypeId], Name) values (2, 'Year')
+    INSERT INTO RankType ([RankTypeId], Name) values (3, 'Month')
+    INSERT INTO RankType ([RankTypeId], Name) values (4, 'Week')
+    INSERT INTO RankType ([RankTypeId], Name) values (5, 'Day')
 END
 
 IF object_id('PersonWealth', 'U') IS NULL
@@ -49,8 +52,8 @@ BEGIN
 	[PersonWealthId] [int] NOT NULL PRIMARY KEY IDENTITY,
 	[PersonId] [int] NOT NULL FOREIGN KEY REFERENCES Person(PersonId),
 	RankTypeId int NOT NULL FOREIGN KEY REFERENCES RankType(RankTypeId),
-	Wealth DECIMAL(15,2),
-	[rank] int NOT NULL CONSTRAINT [DF_PersonWealth_Rank]  DEFAULT ((0)),
+	Wealth DECIMAL(15,2) NOT NULL CONSTRAINT [DF_PersonWealth_Wealth]  DEFAULT ((0)),
+	[Rank] int NOT NULL CONSTRAINT [DF_PersonWealth_Rank]  DEFAULT ((0)),
 	InsertDate Datetime NOT NULL DEFAULT(GETDATE()),
 	UpdateDate Datetime NOT NULL DEFAULT(GETDATE())
 	)
@@ -105,6 +108,7 @@ IF (object_id('GetPersons', 'P') IS NULL AND object_id('GetPersons', 'PC') IS NU
 BEGIN
     exec('
     CREATE Proc [dbo].GetPersons (
+	    @rankTypeId int = 1,
         @offset int = 0,
         @perPage int = 100
     )
@@ -112,9 +116,11 @@ BEGIN
     BEGIN
     	SET NOCOUNT ON;
     	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
-    
-        SELECT [PersonId], [Name], [Wealth], [Rank], [InsertDate], [UpdateDate]
-    	FROM Person
+
+        SELECT p.[PersonId], [Name], [Wealth], [Rank], p.[InsertDate], p.[UpdateDate]
+    	FROM Person p
+		JOIN PersonWealth pw ON p.PersonId = pw.PersonId
+		WHERE pw.RankTypeId = @RankTypeId
     	ORDER BY [Rank] ASC
     	OFFSET @offset ROWS FETCH NEXT @perPage ROWS ONLY
     END
@@ -126,7 +132,8 @@ BEGIN
     exec('
     CREATE Proc [dbo].GetPersonAndSurroundingPeople (
         @personId int,
-        @range int = 5
+        @range int = 5,
+	    @rankTypeId int = 1
     )
     AS
     BEGIN
@@ -135,8 +142,10 @@ BEGIN
             
         DECLARE @numberedPerson table(PersonId INT, [RowNumber] INT); 
         INSERT INTO @numberedPerson
-        SELECT [PersonId], ROW_NUMBER() OVER (ORDER BY [Rank] ASC) AS [RowNumber]
-        FROM Person;
+        SELECT p.[PersonId], ROW_NUMBER() OVER (ORDER BY pw.[Rank] ASC) AS [RowNumber]
+        FROM Person p
+		JOIN PersonWealth pw ON p.PersonId = pw.PersonId
+		WHERE pw.RankTypeId = @RankTypeId;
         
         DECLARE @from int;
         SELECT @from = np.RowNumber - @range
@@ -148,11 +157,13 @@ BEGIN
         FROM @numberedPerson np
         WHERE np.[PersonId] = @personId
         
-        SELECT p.[PersonId], p.[Name], p.[Wealth], p.[Rank], p.[InsertDate], p.[UpdateDate]
+        SELECT p.[PersonId], p.[Name], pw.[Wealth], pw.[Rank], p.[InsertDate], p.[UpdateDate]
         FROM Person p
         JOIN @numberedPerson np ON np.[PersonId] = p.[PersonId]
-        WHERE np.RowNumber BETWEEN @from AND @to
-        ORDER BY [Rank] ASC
+		JOIN PersonWealth pw ON p.PersonId = pw.PersonId
+		WHERE pw.RankTypeId = @RankTypeId
+        AND   np.RowNumber BETWEEN @from AND @to
+        ORDER BY pw.[Rank] ASC
     END
 	')
 END
@@ -168,10 +179,11 @@ BEGIN
     	SET NOCOUNT ON;
     	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
     
-        SELECT [PersonId], [Name], [Wealth], [Rank], [InsertDate], [UpdateDate]
+        SELECT [PersonId], [Name], [InsertDate], [UpdateDate]
     	FROM Person
 		WHERE PersonId = @personId
 
+		EXEC GetWealth @personId
 		EXEC GetPayments @personId
 		EXEC GetAchievements @personId
     END
@@ -181,7 +193,7 @@ END
 IF (object_id('GetPersonByName', 'P') IS NULL AND object_id('GetPersonByName', 'PC') IS NULL)
 BEGIN
     exec('
-    Create Proc [dbo].GetPersonByName (
+    CREATE Proc [dbo].GetPersonByName (
     	@name varchar(128)
     )
     AS
@@ -196,6 +208,25 @@ BEGIN
 		WHERE Name = @name
 
 		EXEC GetPerson @personId
+    END
+	')
+END
+
+IF (object_id('GetWealth', 'P') IS NULL AND object_id('GetWealth', 'PC') IS NULL)
+BEGIN    
+    exec('
+    Create Proc [dbo].GetWealth(
+    	@personId int
+    )
+    AS
+    BEGIN
+    	SET NOCOUNT ON;
+    	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+    
+        SELECT pw.[RankTypeId], rt.[Name] as RankTypeName, pw.[Wealth], pw.[Rank], pw.[InsertDate], pw.[UpdateDate]
+    	FROM PersonWealth pw
+		JOIN [dbo].[RankType] rt on pw.[RankTypeId] = rt.[RankTypeId]
+		WHERE pw.personId = @personId
     END
 	')
 END
@@ -222,7 +253,6 @@ BEGIN
 	')
 END
 
-
 IF (object_id('GetAchievements', 'P') IS NULL AND object_id('GetAchievements', 'PC') IS NULL)
 BEGIN    
     exec('
@@ -246,24 +276,26 @@ END
 IF (object_id('SetRank', 'P') IS NULL AND object_id('SetRank', 'PC') IS NULL)
 BEGIN    
     exec('
-    Create Proc [dbo].SetRank(
+    CREATE Proc [dbo].SetRank(
     	@personId int
     )
     AS
-    BEGIN
+    BEGIN	
     	SET NOCOUNT ON;
     	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
 
-        DECLARE @rankings table(PersonId INT, [Rank] INT); 
+        DECLARE @rankings table(PersonId INT, [Rank] INT, [rankTypeId] INT); 
 
         INSERT INTO @rankings
-		SELECT [PersonId], RANK() OVER (ORDER BY [Wealth] DESC) as [Rank]
-    	FROM Person;
+		SELECT p.[PersonId], RANK() OVER (PARTITION BY pw.rankTypeId ORDER BY pw.[Wealth] DESC) as [Rank], pw.rankTypeId
+    	FROM Person p
+		JOIN PersonWealth pw on p.personId = pw.personId;
 		
-		UPDATE [Dbo].[Person]
-		SET [Person].[Rank] = r.[Rank]
+		UPDATE [Dbo].[PersonWealth]
+		SET [PersonWealth].[Rank] = r.[Rank]
 		FROM @rankings r
-		WHERE Person.PersonId = @personId
+		WHERE PersonWealth.PersonId = @personId
+		AND PersonWealth.rankTypeId = r.rankTypeId
 		AND r.PersonId = @personId; 
     END
 	')
@@ -272,22 +304,24 @@ END
 IF (object_id('SetRanks', 'P') IS NULL AND object_id('SetRanks', 'PC') IS NULL)
 BEGIN    
     exec('
-    Create Proc [dbo].SetRanks
+    CREATE Proc [dbo].SetRanks
     AS
     BEGIN
-    	SET NOCOUNT ON;
+        SET NOCOUNT ON;
     	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
-
-        DECLARE @rankings table(PersonId INT, [Rank] INT); 
+		
+		DECLARE @rankings table(PersonId INT, [Rank] INT, [rankTypeId] INT); 
 
         INSERT INTO @rankings
-		SELECT [PersonId], RANK() OVER (ORDER BY [Wealth] DESC) as [Rank]
-    	FROM Person;
+		SELECT p.[PersonId], RANK() OVER (PARTITION BY pw.rankTypeId ORDER BY pw.[Wealth] DESC) as [Rank], pw.rankTypeId
+    	FROM Person p
+		JOIN PersonWealth pw on p.personId = pw.personId;
 		
-		UPDATE [Dbo].[Person]
-		SET [Person].[Rank] = r.[Rank]
+		UPDATE [Dbo].[PersonWealth]
+		SET [PersonWealth].[Rank] = r.[Rank]
 		FROM @rankings r
-		WHERE Person.PersonId = r.PersonId; 
+		WHERE PersonWealth.rankTypeId = r.rankTypeId
+		AND PersonWealth.[PersonId] = r.[PersonId]; 
     END
 	')
 END
@@ -303,9 +337,16 @@ BEGIN
     	SET NOCOUNT ON;
     	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
 
-        INSERT INTO [dbo].[Person] ([Name], [Wealth]) VALUES (@Name, 0);
+        INSERT INTO [dbo].[Person] ([Name]) VALUES (@Name);
 
-		SELECT SCOPE_IDENTITY() as PersonId;
+		DECLARE @personId int;
+		SELECT @personId = SCOPE_IDENTITY();
+
+		INSERT INTO [dbo].[PersonWealth] ([PersonId], [RankTypeId], [Wealth], [Rank])
+		SELECT @personId, [RankTypeId], 0, 0
+		FROM RankType
+
+		SELECT @personId as [PersonId];
     END
 	')
 END
@@ -324,9 +365,10 @@ BEGIN
     
 	    INSERT INTO [dbo].[Payment] (PersonId,Amount)
 		VALUES (@personId, @amount)
+
 		SELECT SCOPE_IDENTITY() as PaymentId;
 
-        UPDATE [dbo].[Person]
+        UPDATE [dbo].[PersonWealth]
         SET Wealth = Wealth + @amount
         WHERE PersonId = @personId
     END
@@ -348,13 +390,12 @@ BEGIN
 	    INSERT INTO [dbo].[PersonAchievement] (PersonId, AchievementId) VALUES (@personId, @achievementId)
     END
 	')
-END
-");
+END");
             }
         }
         /*
         */
-        public List<Person> GetPersons(int offset = 0, int perPage = 100)
+        public List<Person> GetPersons(int offset = 0, int perPage = 100, RankType rankType = RankType.AllTime)
         {
             List<Person> persons;
             using (DbConnection connection = new SqlConnection(_connectionString))
@@ -379,6 +420,7 @@ END
                 person = results.Read<Person>().FirstOrDefault();
                 if (person != null)
                 {
+                    person.Rankings = results.Read<Ranking>().ToList();
                     person.Payments = results.Read<Payment>().ToList();
                     person.Achievements = results.Read<Achievement>().ToList();
                 }
@@ -397,6 +439,7 @@ END
                 person = results.Read<Person>().FirstOrDefault();
                 if (person != null)
                 {
+                    person.Rankings = results.Read<Ranking>().ToList();
                     person.Payments = results.Read<Payment>().ToList();
                     person.Achievements = results.Read<Achievement>().ToList();
                 }
@@ -464,7 +507,7 @@ END
             }
         }
 
-        public List<Person> GetPersonAndSurroundingPeople(int personId, int range)
+        public List<Person> GetPersonAndSurroundingPeople(int personId, int range, RankType rankType = RankType.AllTime)
         {
             using (DbConnection connection = new SqlConnection(_connectionString))
             {
@@ -481,6 +524,7 @@ END
                 connection.Execute("SetRank", new { personId }, commandType: CommandType.StoredProcedure);
             }
         }
+
         public void SetRanks()
         {
             using (DbConnection connection = new SqlConnection(_connectionString))
