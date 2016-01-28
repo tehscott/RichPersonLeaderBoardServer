@@ -35,6 +35,27 @@ BEGIN
     )
 END
 
+IF object_id('RankType', 'U') IS NULL
+BEGIN
+	create table RankType(
+		[RankTypeId] [int] NOT NULL PRIMARY KEY IDENTITY,
+		Name varchar(256)
+	)
+END
+
+IF object_id('PersonWealth', 'U') IS NULL
+BEGIN
+    create table [dbo].[PersonWealth](
+	[PersonWealthId] [int] NOT NULL PRIMARY KEY IDENTITY,
+	[PersonId] [int] NOT NULL FOREIGN KEY REFERENCES Person(PersonId),
+	RankTypeId int NOT NULL FOREIGN KEY REFERENCES RankType(RankTypeId),
+	Wealth DECIMAL(15,2),
+	[rank] int NOT NULL CONSTRAINT [DF_PersonWealth_Rank]  DEFAULT ((0)),
+	InsertDate Datetime NOT NULL DEFAULT(GETDATE()),
+	UpdateDate Datetime NOT NULL DEFAULT(GETDATE())
+	)
+END
+
 IF object_id('Payment', 'U') IS NULL
 BEGIN
     CREATE TABLE [dbo].[Payment](
