@@ -12,11 +12,9 @@ import android.support.v4.view.ViewPager;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
-import android.view.View;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 
-import com.mattandmikeandscott.richpersonleaderboard.Adapters.PersonListAdapter;
+import com.mattandmikeandscott.richpersonleaderboard.adapters.PersonListAdapter;
 import com.mattandmikeandscott.richpersonleaderboard.domain.Person;
 
 import java.util.ArrayList;
