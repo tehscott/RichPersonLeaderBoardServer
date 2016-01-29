@@ -401,12 +401,21 @@ END");
             using (DbConnection connection = new SqlConnection(_connectionString))
             {
                 var results =
-                    connection.Query<Person>("GetPersons", new { @offset = offset, @perPage = perPage }, commandType: CommandType.StoredProcedure);
+                    connection.Query<Person>("GetPersons", new { @rankTypeId = (int)rankType, offset, perPage }, commandType: CommandType.StoredProcedure);
 
                 persons = results.ToList();
             }
 
             return persons;
+        }
+
+        public void ResetWealth(RankType rankType = RankType.Day)
+        {
+            using (DbConnection connection = new SqlConnection(_connectionString))
+            {
+                var results =
+                    connection.Execute("ResetWealth", new { @rankTypeId = (int)rankType }, commandType: CommandType.StoredProcedure);
+            }
         }
 
         public Person GetPerson(int personId)

@@ -17,9 +17,14 @@ namespace Business
             Dao = new Dao();
         }
 
-        public List<Person> GetPersons(int offset = 0, int perPage = 100)
+        public List<Person> GetPersons(RankType rankType, int offset = 0, int perPage = 100)
         {
-            return Dao.GetPersons(offset, perPage);
+            return Dao.GetPersons(offset, perPage, rankType);
+        }
+
+        public void ResetWealth(RankType rankType = RankType.Day)
+        {
+            Dao.ResetWealth(rankType);
         }
 
         public Person GetPerson(int personId)
@@ -115,9 +120,9 @@ namespace Business
             }
         }
 
-        public List<Person> GetPersonAndSurroundingPeople(int personId, int range)
+        public List<Person> GetPersonAndSurroundingPeople(int personId, int range, RankType rankType)
         {
-            return Dao.GetPersonAndSurroundingPeople(personId, range);
+            return Dao.GetPersonAndSurroundingPeople(personId, range, rankType);
         }
     }
 }
