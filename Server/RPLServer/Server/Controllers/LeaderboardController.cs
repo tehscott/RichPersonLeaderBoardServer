@@ -27,13 +27,13 @@ namespace Server.Controllers
         [HttpGet]
         public ActionResult Person(int id)
         {
-            return Json(Business.GetPerson(id), JsonRequestBehavior.AllowGet);
+            return Json(new List<Person> { Business.GetPerson(id) }, JsonRequestBehavior.AllowGet);
         }
 
         [HttpGet]
         public ActionResult PersonByName(string name)
         {
-            return Json(Business.GetPerson(name), JsonRequestBehavior.AllowGet);
+            return Json(new List<Person> { Business.GetPerson(name) }, JsonRequestBehavior.AllowGet);
         }
 
         [HttpPost]
