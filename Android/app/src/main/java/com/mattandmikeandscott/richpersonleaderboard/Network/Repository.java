@@ -40,6 +40,8 @@ public class Repository {
             endpoint += "/api/persons";
         } else if(peopleQueryType == PeopleQueryType.Myself) {
             endpoint += "/api/GetPersonAndSurroundingPeople";
+        } else if(peopleQueryType == PeopleQueryType.Person) {
+            endpoint += "/api/person";
         } else {
             throw new IllegalArgumentException("Invalid endpoint for getPeople()!");
         }
