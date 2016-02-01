@@ -21,6 +21,7 @@ namespace Data
             using (DbConnection connection = new SqlConnection(_connectionString))
             {
                 connection.Execute(@"
+
 USE RPLDB;
 
 IF object_id('Person', 'U') IS NULL
@@ -273,6 +274,51 @@ BEGIN
 	')
 END
 
+IF (object_id('ResetWealth', 'P') IS NULL AND object_id('ResetWealth', 'PC') IS NULL)
+BEGIN    
+    exec('
+    Create Proc [dbo].ResetWealth(
+	    @rankTypeId int
+    )
+    AS
+    BEGIN
+    	SET NOCOUNT ON;
+    	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+		
+        IF(@rankTypeId = 1)
+        BEGIN
+            UPDATE PersonWealth
+            SET Wealth = 0
+            WHERE RankTypeId in (1, 2, 3, 4, 5)
+        END
+        IF(@rankTypeId = 2)
+        BEGIN
+            UPDATE PersonWealth
+            SET Wealth = 0
+            WHERE RankTypeId in (2, 3, 5)
+        END
+        IF(@rankTypeId = 3)
+        BEGIN
+            UPDATE PersonWealth
+            SET Wealth = 0
+            WHERE RankTypeId in (3, 5)
+        END
+        IF(@rankTypeId = 4)
+        BEGIN
+            UPDATE PersonWealth
+            SET Wealth = 0
+            WHERE RankTypeId in (4, 5)
+        END
+        IF(@rankTypeId = 5)
+        BEGIN
+            UPDATE PersonWealth
+            SET Wealth = 0
+            WHERE RankTypeId in (5)
+        END		    
+    END
+	')
+END
+
 IF (object_id('SetRank', 'P') IS NULL AND object_id('SetRank', 'PC') IS NULL)
 BEGIN    
     exec('
@@ -390,7 +436,8 @@ BEGIN
 	    INSERT INTO [dbo].[PersonAchievement] (PersonId, AchievementId) VALUES (@personId, @achievementId)
     END
 	')
-END");
+END
+");
             }
         }
         /*
@@ -401,12 +448,21 @@ END");
             using (DbConnection connection = new SqlConnection(_connectionString))
             {
                 var results =
-                    connection.Query<Person>("GetPersons", new { @offset = offset, @perPage = perPage }, commandType: CommandType.StoredProcedure);
+                    connection.Query<Person>("GetPersons", new { @rankTypeId = (int)rankType, offset, perPage }, commandType: CommandType.StoredProcedure);
 
                 persons = results.ToList();
             }
 
             return persons;
+        }
+
+        public void ResetWealth(RankType rankType = RankType.Day)
+        {
+            using (DbConnection connection = new SqlConnection(_connectionString))
+            {
+                var results =
+                    connection.Execute("ResetWealth", new { @rankTypeId = (int)rankType }, commandType: CommandType.StoredProcedure);
+            }
         }
 
         public Person GetPerson(int personId)

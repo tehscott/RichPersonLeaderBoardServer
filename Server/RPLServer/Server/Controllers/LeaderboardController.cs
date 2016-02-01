@@ -19,21 +19,27 @@ namespace Server.Controllers
         }
 
         [HttpGet]
-        public ActionResult Persons(int offset = 0, int perPage = 100)
+        public ActionResult Persons(RankType rankType = RankType.Day, int offset = 0, int perPage = 100)
         {
-            return Json(Business.GetPersons(offset, perPage), JsonRequestBehavior.AllowGet);
+            return Json(Business.GetPersons(rankType, offset: offset, perPage: perPage), JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpPost]
+        public void ResetWealth(RankType rankType = RankType.Day)
+        {
+            Business.ResetWealth(rankType);
         }
 
         [HttpGet]
         public ActionResult Person(int id)
         {
-            return Json(Business.GetPerson(id), JsonRequestBehavior.AllowGet);
+            return Json(new List<Person> { Business.GetPerson(id) }, JsonRequestBehavior.AllowGet);
         }
 
         [HttpGet]
         public ActionResult PersonByName(string name)
         {
-            return Json(Business.GetPerson(name), JsonRequestBehavior.AllowGet);
+            return Json(new List<Person> { Business.GetPerson(name) }, JsonRequestBehavior.AllowGet);
         }
 
         [HttpPost]
@@ -67,9 +73,9 @@ namespace Server.Controllers
         }
 
         [HttpGet]
-        public ActionResult GetPersonAndSurroundingPeople(int id, int range = 5)
+        public ActionResult GetPersonAndSurroundingPeople(int id, RankType rankType = RankType.Day, int range = 5)
         {
-            return Json(Business.GetPersonAndSurroundingPeople(id, range), JsonRequestBehavior.AllowGet);
+            return Json(Business.GetPersonAndSurroundingPeople(id, range, rankType), JsonRequestBehavior.AllowGet);
         }
     }
 }

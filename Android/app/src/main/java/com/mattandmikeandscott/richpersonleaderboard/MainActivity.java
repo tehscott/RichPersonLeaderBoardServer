@@ -24,21 +24,28 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.mattandmikeandscott.richpersonleaderboard.adapters.PersonListAdapter;
+import com.mattandmikeandscott.richpersonleaderboard.domain.GetPeopleResponse;
+import com.mattandmikeandscott.richpersonleaderboard.domain.PeopleQueryType;
 import com.mattandmikeandscott.richpersonleaderboard.domain.Person;
+import com.mattandmikeandscott.richpersonleaderboard.domain.RankType;
 
 import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.Map;
 
 import static com.mattandmikeandscott.richpersonleaderboard.MainActivity.HandlerResult.*;
 
 public class MainActivity extends ActionBarActivity implements ActionBar.TabListener {
     private SectionsPagerAdapter mSectionsPagerAdapter;
+    private int myId = 1; // TODO: Setup logging in and such
 
     private ViewPager mViewPager;
 
     public enum HandlerResult {
-        PERSON_INFO_AQUIRED
+        PEOPLE_INFO_AQUIRED, PERSON_INFO_AQUIRED
     }
 
     @Override
@@ -82,6 +89,54 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
                             //.setIcon(mSectionsPagerAdapter.getPageIcon(i))
                             .setTabListener(this));
         }
+
+        setupButtons();
+    }
+
+    private void setupButtons() {
+        findViewById(R.id.find_me_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(MainActivity.this, "Searching with hard coded ID of 1", Toast.LENGTH_SHORT).show();
+                findMe();
+            }
+        });
+    }
+
+    private void findMe() {
+        Map<String, Integer> parameters = new Hashtable<>();
+        parameters.put("id", myId);
+        parameters.put("range", 5);
+
+        int currentPosition = mViewPager.getCurrentItem();
+        String tag = "";
+        RankType rankType = RankType.AllTime;
+
+        switch(currentPosition) {
+            case 0:
+                rankType = RankType.AllTime;
+                tag = rankType.getName();
+                break;
+            case 1:
+                rankType = RankType.Day;
+                tag = rankType.getName();
+                break;
+            case 2:
+                rankType = RankType.Week;
+                tag = rankType.getName();
+                break;
+            case 3:
+                rankType = RankType.Month;
+                tag = rankType.getName();
+                break;
+            case 4:
+                rankType = RankType.Year;
+                tag = rankType.getName();
+                break;
+        }
+
+        View fragmentList = mViewPager.findViewWithTag(tag);
+        MainFragment.refreshListAsync(getResources(), MainActivity.this, fragmentList, PeopleQueryType.Myself, rankType, parameters);
     }
 
     private void hideActionBarTitle(ActionBar actionBar) {
@@ -164,14 +219,12 @@ public class MainActivity extends ActionBarActivity implements ActionBar.TabList
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
 
-            if (msg.what == PERSON_INFO_AQUIRED.ordinal()) {
-                Context context = (Context) ((Object[]) msg.obj)[0];
-                ListView list = (ListView) ((Object[]) msg.obj)[1];
-                ArrayList<Person> people = (ArrayList<Person>) ((Object[]) msg.obj)[2];
+            if (msg.what == PEOPLE_INFO_AQUIRED.ordinal()) {
+                GetPeopleResponse response = (GetPeopleResponse) msg.obj;
 
-                list.setAdapter(new PersonListAdapter(context, people));
+                response.getList().setAdapter(new PersonListAdapter(response.getContext(), response.getPeople(), response.getPeopleQueryType(), response.getRankType()));
 
-                final SwipeRefreshLayout swipeLayout = (SwipeRefreshLayout) list.getParent();
+                final SwipeRefreshLayout swipeLayout = (SwipeRefreshLayout) response.getList().getParent();
                 swipeLayout.setRefreshing(false);
                 swipeLayout.setEnabled(true);
             }
