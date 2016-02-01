@@ -1,5 +1,7 @@
 package com.mattandmikeandscott.richpersonleaderboard;
 
+import android.app.Activity;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.Message;
 import android.support.v4.app.Fragment;
@@ -8,9 +10,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 
+import com.mattandmikeandscott.richpersonleaderboard.domain.GetPeopleResponse;
 import com.mattandmikeandscott.richpersonleaderboard.domain.PeopleQueryType;
 import com.mattandmikeandscott.richpersonleaderboard.domain.Person;
+import com.mattandmikeandscott.richpersonleaderboard.domain.RankType;
 import com.mattandmikeandscott.richpersonleaderboard.network.Repository;
 
 import java.util.ArrayList;
@@ -35,37 +40,58 @@ public class MainFragment extends Fragment {
         View listLayout = null;
         int sectionNumber = getArguments().getInt(ARG_SECTION_NUMBER);
 
+        listLayout = inflater.inflate(R.layout.fragment_list, container, false);
+
+        RankType rankType = RankType.AllTime;
+
         switch (sectionNumber) {
             case 0:
-                listLayout = inflater.inflate(R.layout.fragment_list, container, false);
-
-                Map<String, Integer> parameters = new Hashtable<>();
-                parameters.put("offset", 0);
-                parameters.put("perpage", 100);
-
-                refreshListAsync(listLayout, PeopleQueryType.AllTime, parameters);
-                setupSwipeLayout(listLayout, PeopleQueryType.AllTime, parameters);
-                setupButtons(listLayout);
+                rankType = RankType.AllTime;
 
                 break;
             case 1:
-                listLayout = inflater.inflate(R.layout.fragment_list, container, false);
+                rankType = RankType.Day;
+
                 break;
             case 2:
-                listLayout = inflater.inflate(R.layout.fragment_list, container, false);
+                rankType = RankType.Week;
+
                 break;
             case 3:
-                listLayout = inflater.inflate(R.layout.fragment_list, container, false);
+                rankType = RankType.Month;
+
                 break;
             case 4:
-                listLayout = inflater.inflate(R.layout.fragment_list, container, false);
+                rankType = RankType.Year;
+
                 break;
         }
+
+        ((RelativeLayout) listLayout).setTag(rankType.getName());
+        container.setTag(rankType.getName());
+
+        Map<String, Integer> parameters = new Hashtable<>();
+        parameters.put("offset", 0);
+        parameters.put("perpage", 100);
+        parameters.put("ranktype", rankType.getValue());
+
+        refreshListAsync(getResources(), (MainActivity) getActivity(), listLayout, PeopleQueryType.Persons, rankType, parameters);
+        setupSwipeLayout(listLayout, PeopleQueryType.Persons, rankType, parameters);
 
         return listLayout;
     }
 
-    private void refreshListAsync(final View listLayout, final PeopleQueryType queryType, final Map<String, Integer> parameters) {
+    private void setupSwipeLayout(final View listLayout, final PeopleQueryType queryType, final RankType rankType, final Map<String, Integer> parameters) {
+        final SwipeRefreshLayout swipeLayout = (SwipeRefreshLayout) listLayout.findViewById(R.id.list_container);
+        swipeLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshListAsync(getResources(), (MainActivity) getActivity(), listLayout, queryType, rankType, parameters);
+            }
+        });
+    }
+
+    public static void refreshListAsync(final Resources resources, final MainActivity activity, final View listLayout, final PeopleQueryType queryType, final RankType rankType, final Map<String, Integer> parameters) {
         final SwipeRefreshLayout swipeLayout = (SwipeRefreshLayout) listLayout.findViewById(R.id.list_container);
         swipeLayout.setRefreshing(true);
         swipeLayout.setEnabled(false);
@@ -73,41 +99,17 @@ public class MainFragment extends Fragment {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Repository repository = new Repository(getResources());
+                Repository repository = new Repository(resources);
                 ArrayList<Person> people = repository.getPeople(queryType, parameters);
-
                 ListView list = (ListView) listLayout.findViewById(R.id.list);
-                Object[] parameters = new Object[] { getActivity(), list, people };
+                GetPeopleResponse response = new GetPeopleResponse(activity, list, people, queryType, rankType, true);
 
                 Message message = new Message();
-                message.what = MainActivity.HandlerResult.PERSON_INFO_AQUIRED.ordinal();
-                message.obj = parameters;
+                message.what = MainActivity.HandlerResult.PEOPLE_INFO_AQUIRED.ordinal();
+                message.obj = response;
 
-                ((MainActivity)getActivity()).handler.sendMessage(message);
+                activity.handler.sendMessage(message);
             }
         }).start();
-    }
-
-    private void setupSwipeLayout(final View listLayout, final PeopleQueryType queryType, final Map<String, Integer> parameters) {
-        final SwipeRefreshLayout swipeLayout = (SwipeRefreshLayout) listLayout.findViewById(R.id.list_container);
-        swipeLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                refreshListAsync(listLayout, PeopleQueryType.AllTime, parameters);
-            }
-        });
-    }
-
-    private void setupButtons(final View listLayout) {
-        listLayout.findViewById(R.id.find_me_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Map<String, Integer> parameters = new Hashtable<String, Integer>();
-                parameters.put("id", 8);
-                parameters.put("range", 5);
-
-                refreshListAsync(listLayout, PeopleQueryType.Myself, parameters);
-            }
-        });
     }
 }
