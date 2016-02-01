@@ -4,8 +4,12 @@ import android.content.res.Resources;
 import android.util.Log;
 
 import com.mattandmikeandscott.richpersonleaderboard.R;
+import com.mattandmikeandscott.richpersonleaderboard.domain.Achievement;
+import com.mattandmikeandscott.richpersonleaderboard.domain.Payment;
 import com.mattandmikeandscott.richpersonleaderboard.domain.PeopleQueryType;
 import com.mattandmikeandscott.richpersonleaderboard.domain.Person;
+import com.mattandmikeandscott.richpersonleaderboard.domain.Rank;
+import com.mattandmikeandscott.richpersonleaderboard.domain.RankType;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
@@ -25,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Map;
 
 public class Repository {
@@ -36,7 +41,7 @@ public class Repository {
     }
 
     public ArrayList<Person> getPeople(PeopleQueryType peopleQueryType, Map<String, Integer> parameters) {
-        if(peopleQueryType == PeopleQueryType.AllTime) {
+        if(peopleQueryType == PeopleQueryType.Persons) {
             endpoint += "/api/persons";
         } else if(peopleQueryType == PeopleQueryType.Myself) {
             endpoint += "/api/GetPersonAndSurroundingPeople";
@@ -54,11 +59,47 @@ public class Repository {
             for(int i = 0; i < peopleData.length(); i++) {
                 JSONObject jsonObject = peopleData.getJSONObject(i);
 
-                people.add(new Person(jsonObject.getInt("PersonId"), jsonObject.getString("Name"), jsonObject.getDouble("Wealth"), jsonObject.getInt("Rank")));
+                JSONArray jRankings = null;
+                JSONArray jAchievements = null;
+                JSONArray jPayments = null;
+                ArrayList<Rank> rankings = new ArrayList<>();
+                ArrayList<Payment> payments = new ArrayList<>();
+                ArrayList<Achievement> achievements = new ArrayList<>();
+
+                if(!jsonObject.getString("Rankings").equals("null")) {
+                    jRankings = jsonObject.getJSONArray("Rankings");
+
+                    for(int j = 0; j < jRankings.length(); j++) {
+                        int rankTypeInt = jRankings.getJSONObject(j).getInt("RankType");
+                        RankType rankType = RankType.getRankType(rankTypeInt);
+
+                        rankings.add(new Rank(rankType, jRankings.getJSONObject(j).getInt("Rank"), jRankings.getJSONObject(j).getDouble("Wealth")));
+                    }
+                }
+
+                if(!jsonObject.getString("Payments").equals("null")) {
+                    jPayments = jsonObject.getJSONArray("Payments");
+
+                    for(int j = 0; j < jPayments.length(); j++) {
+                        String dateString = jPayments.getJSONObject(j).getString("InsertDate");
+                        Calendar cal = Calendar.getInstance();
+                        cal.setTimeInMillis(Long.parseLong(dateString.substring(6, dateString.length() - 4)));
+                        payments.add(new Payment(jPayments.getJSONObject(j).getInt("PaymentId"), jPayments.getJSONObject(j).getDouble("Amount"), cal.getTime()));
+                    }
+                }
+
+                if(!jsonObject.getString("Achievements").equals("null")) {
+                    jAchievements = jsonObject.getJSONArray("Achievements");
+
+                    for(int j = 0; j < jAchievements.length(); j++) {
+                        achievements.add(new Achievement(jAchievements.getJSONObject(j).getInt("AchievementType"), jAchievements.getJSONObject(j).getString("Name"), jAchievements.getJSONObject(j).getString("Description")));
+                    }
+                }
+
+                people.add(new Person(jsonObject.getInt("PersonId"), jsonObject.getString("Name"), jsonObject.getInt("Rank"), jsonObject.getDouble("Wealth"), rankings, payments, achievements));
             }
         } catch(JSONException e) {
             Log.e(resources.getString(R.string.app_short_name), "Error parsing JSON data " + e.toString());
-
         }
 
         return people;
