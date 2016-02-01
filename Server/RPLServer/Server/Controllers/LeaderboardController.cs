@@ -9,6 +9,7 @@ using Server.Models;
 
 namespace Server.Controllers
 {
+    //[RequireHttps]
     public class LeaderboardController : Controller
     {
         public static BusinessLogic Business { get; }
