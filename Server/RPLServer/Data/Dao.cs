@@ -47,6 +47,14 @@ BEGIN
     INSERT INTO RankType ([RankTypeId], Name) values (5, 'Day')
 END
 
+IF object_id('WealthResetHistory', 'U') IS NULL
+BEGIN
+	create table WealthResetHistory(
+		LastResetDate DateTime
+	)
+	insert into WealthResethistory values (getdate())
+END
+
 IF object_id('PersonWealth', 'U') IS NULL
 BEGIN
     create table [dbo].[PersonWealth](
@@ -103,6 +111,20 @@ BEGIN
         [AchievementId] [int] NOT NULL FOREIGN KEY REFERENCES Achievement(AchievementId),
     	[InsertDate] [dateTime] NOT NULL CONSTRAINT DF_PersonAchievement_InsertDate_GETDATE DEFAULT GETDATE()
     )
+END
+
+IF (object_id('GetLastResetDate', 'P') IS NULL AND object_id('GetLastResetDate', 'PC') IS NULL)
+BEGIN
+    exec('
+    CREATE Proc [dbo].GetLastResetDate
+    AS
+    BEGIN
+    	SET NOCOUNT ON;
+    	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+
+        SELECT LastResetDate FROM WealthResetHistory
+    END
+	')
 END
 
 IF (object_id('GetPersons', 'P') IS NULL AND object_id('GetPersons', 'PC') IS NULL)
@@ -315,6 +337,7 @@ BEGIN
             SET Wealth = 0
             WHERE RankTypeId in (5)
         END		    
+		UPDATE [dbo].[WealthResetHistory] SET [LastResetDate] = GETDATE();
     END
 	')
 END
@@ -560,6 +583,15 @@ END
             using (DbConnection connection = new SqlConnection(_connectionString))
             {
                 connection.Execute("CreateAchievement", new { personId, @achievementId = (int)achievementId }, commandType: CommandType.StoredProcedure);
+            }
+        }
+
+        public DateTime GetLastResetDate()
+        {
+            using (DbConnection connection = new SqlConnection(_connectionString))
+            {
+                return connection.Query<DateTime>("GetLastResetDate", new { },
+                    commandType: CommandType.StoredProcedure).First();
             }
         }
 

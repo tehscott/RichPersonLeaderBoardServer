@@ -9,6 +9,7 @@ using Server.Models;
 
 namespace Server.Controllers
 {
+    //[RequireHttps]
     public class LeaderboardController : Controller
     {
         public static BusinessLogic Business { get; }
@@ -19,7 +20,7 @@ namespace Server.Controllers
         }
 
         [HttpGet]
-        public ActionResult Persons(RankType rankType = RankType.Day, int offset = 0, int perPage = 100)
+        public ActionResult Persons(RankType rankType = RankType.AllTime, int offset = 0, int perPage = 100)
         {
             return Json(Business.GetPersons(rankType, offset: offset, perPage: perPage), JsonRequestBehavior.AllowGet);
         }
