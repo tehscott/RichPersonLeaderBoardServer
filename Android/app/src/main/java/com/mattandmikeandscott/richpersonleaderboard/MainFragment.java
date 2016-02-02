@@ -13,6 +13,7 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 
 import com.mattandmikeandscott.richpersonleaderboard.domain.GetPeopleResponse;
+import com.mattandmikeandscott.richpersonleaderboard.domain.MainActivityHandlerResult;
 import com.mattandmikeandscott.richpersonleaderboard.domain.PeopleQueryType;
 import com.mattandmikeandscott.richpersonleaderboard.domain.Person;
 import com.mattandmikeandscott.richpersonleaderboard.domain.RankType;
@@ -105,7 +106,7 @@ public class MainFragment extends Fragment {
                 GetPeopleResponse response = new GetPeopleResponse(activity, list, people, queryType, rankType, true);
 
                 Message message = new Message();
-                message.what = MainActivity.HandlerResult.PEOPLE_INFO_AQUIRED.ordinal();
+                message.what = MainActivityHandlerResult.PEOPLE_INFO_AQUIRED.ordinal();
                 message.obj = response;
 
                 activity.handler.sendMessage(message);
