@@ -124,5 +124,10 @@ namespace Business
         {
             return Dao.GetPersonAndSurroundingPeople(personId, range, rankType);
         }
+
+        public DateTime GetLastResetDate()
+        {
+            return Dao.GetLastResetDate();
+        }
     }
 }
