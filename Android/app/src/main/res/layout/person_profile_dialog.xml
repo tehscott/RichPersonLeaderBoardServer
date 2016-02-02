@@ -29,7 +29,7 @@
                 android:id="@+id/person_profile_header_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Person Profile"
+                android:text=""
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:layout_toRightOf="@+id/profile_back_button"

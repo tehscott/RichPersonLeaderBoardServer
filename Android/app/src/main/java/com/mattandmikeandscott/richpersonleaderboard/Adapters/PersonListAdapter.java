@@ -102,7 +102,6 @@ public class PersonListAdapter extends BaseAdapter {
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         final RelativeLayout layout = (RelativeLayout) inflater.inflate(R.layout.person_profile_dialog, null);
 
-        ((TextView) layout.findViewById(R.id.person_profile_header_text)).setText(String.valueOf(personId));
         layout.findViewById(R.id.profile_back_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
