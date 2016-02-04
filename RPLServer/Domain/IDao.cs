@@ -6,15 +6,15 @@ namespace Domain
     public interface IDao
     {
         List<Person> GetPersons(int offset = 0, int perPage = 100, RankType rankType = RankType.AllTime);
-        List<Person> GetPersonAndSurroundingPeople(int personId, int range, RankType rankType = RankType.AllTime);
+        List<Person> GetPersonAndSurroundingPeople(string googleId, int range, RankType rankType = RankType.AllTime);
         void ResetWealth(RankType rankType = RankType.Day);
-        Person GetPerson(int personId);
-        Person GetPerson(string name);
-        Person CreatePerson(string name);
-        List<Payment> GetPayments(int personId);
-        void CreatePayment(int personId, Decimal amount);
-        List<Achievement> GetAchievements(int personId);
-        void CreateAchievement(int personId, AchievementType achievementType);
+        Person GetPerson(string googleId);
+        Person GetPersonByName(string name);
+        Person CreatePerson(string name, string googleId);
+        List<Payment> GetPayments(string googleId);
+        void CreatePayment(string googleId, Decimal amount);
+        List<Achievement> GetAchievements(string googleId);
+        void CreateAchievement(string googleId, AchievementType achievementType);
         DateTime GetLastResetDate();
     }
 }

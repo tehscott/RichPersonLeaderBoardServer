@@ -21,7 +21,6 @@ namespace Data
             using (DbConnection connection = new SqlConnection(_connectionString))
             {
                 connection.Execute(@"
-
 USE RPLDB;
 
 IF object_id('Person', 'U') IS NULL
@@ -29,6 +28,7 @@ BEGIN
     CREATE TABLE [dbo].[Person](
         [PersonId] [int] NOT NULL PRIMARY KEY IDENTITY,
         [Name] [varchar](128) NOT NULL UNIQUE,
+		[GoogleId] [varchar](32) NOT NULL UNIQUE,
         [InsertDate] [dateTime] NOT NULL CONSTRAINT DF_Person_InsertDate_GETDATE DEFAULT GETDATE(),
         [UpdateDate] [dateTime] NOT NULL CONSTRAINT DF_Person_UpdateDate_GETDATE DEFAULT GETDATE()
     )
@@ -59,7 +59,7 @@ IF object_id('PersonWealth', 'U') IS NULL
 BEGIN
     create table [dbo].[PersonWealth](
 	[PersonWealthId] [int] NOT NULL PRIMARY KEY IDENTITY,
-	[PersonId] [int] NOT NULL FOREIGN KEY REFERENCES Person(PersonId),
+	[PersonId] [int] NOT NULL FOREIGN KEY REFERENCES Person(GoogleId),
 	RankTypeId int NOT NULL FOREIGN KEY REFERENCES RankType(RankTypeId),
 	Wealth DECIMAL(15,2) NOT NULL CONSTRAINT [DF_PersonWealth_Wealth]  DEFAULT ((0)),
 	[Rank] int NOT NULL CONSTRAINT [DF_PersonWealth_Rank]  DEFAULT ((0)),
@@ -72,7 +72,7 @@ IF object_id('Payment', 'U') IS NULL
 BEGIN
     CREATE TABLE [dbo].[Payment](
         [PaymentId] [int] NOT NULL PRIMARY KEY IDENTITY,
-        [PersonId] [int] NOT NULL FOREIGN KEY REFERENCES Person(PersonId),
+        [PersonId] [int] NOT NULL FOREIGN KEY REFERENCES Person(GoogleId),
         [Amount] [decimal](15,2) NOT NULL,
         [InsertDate] [dateTime] NOT NULL CONSTRAINT DF_Payment_InsertDate_GETDATE DEFAULT GETDATE(),
         [UpdateDate] [dateTime] NOT NULL CONSTRAINT DF_Payment_UpdateDate_GETDATE DEFAULT GETDATE()
@@ -86,16 +86,16 @@ BEGIN
         [Name] [varchar](32),
         [Description] [varchar](512)
     )
-    INSERT INTO Achievement (AchievementId, Name, [Description]) values (1, 'Richest', 'You are the richest person in the world!')
-    INSERT INTO Achievement (AchievementId, Name, [Description]) values (2, 'Richest Full Day', 'You are the richest person in the world for a full day!')
-    INSERT INTO Achievement (AchievementId, Name, [Description]) values (3, 'Richest Full Week', 'You are the richest person in the world for a full week!')
-    INSERT INTO Achievement (AchievementId, Name, [Description]) values (4, 'Richest Full Month', 'You are the richest person in the world for a full month!')
-    INSERT INTO Achievement (AchievementId, Name, [Description]) values (5, 'Richest Full Year', 'You are the richest person in the world for a full year!')
-    INSERT INTO Achievement (AchievementId, Name, [Description]) values (6, '2nd Richest', 'You are the second richest person in the world!')
-    INSERT INTO Achievement (AchievementId, Name, [Description]) values (7, '3rd Richest', 'You are the third richest person in the world!')
-    INSERT INTO Achievement (AchievementId, Name, [Description]) values (8, '5th Richest', 'You are the fifth richest person in the world!')
-    INSERT INTO Achievement (AchievementId, Name, [Description]) values (9, '10th Richest', 'You are the tenth richest person in the world!')
-    INSERT INTO Achievement (AchievementId, Name, [Description]) values (10, '100th Richest', 'You are the one-hundreth richest person in the world!')
+    INSERT INTO Achievement (AchievementId, Name, [Description]) values (1, 'Richest', 'You are/were the richest person in the world!')
+    INSERT INTO Achievement (AchievementId, Name, [Description]) values (2, 'Richest Full Day', 'You are/were the richest person in the world for a full day!')
+    INSERT INTO Achievement (AchievementId, Name, [Description]) values (3, 'Richest Full Week', 'You are/were the richest person in the world for a full week!')
+    INSERT INTO Achievement (AchievementId, Name, [Description]) values (4, 'Richest Full Month', 'You are/were the richest person in the world for a full month!')
+    INSERT INTO Achievement (AchievementId, Name, [Description]) values (5, 'Richest Full Year', 'You are/were the richest person in the world for a full year!')
+    INSERT INTO Achievement (AchievementId, Name, [Description]) values (6, '2nd Richest', 'You are/were the second richest person in the world!')
+    INSERT INTO Achievement (AchievementId, Name, [Description]) values (7, '3rd Richest', 'You are/were the third richest person in the world!')
+    INSERT INTO Achievement (AchievementId, Name, [Description]) values (8, '5th Richest', 'You are/were one of the top five richest people in the world!')
+    INSERT INTO Achievement (AchievementId, Name, [Description]) values (9, '10th Richest', 'You are/were one of the top ten richest people in the world!')
+    INSERT INTO Achievement (AchievementId, Name, [Description]) values (10, '100th Richest', 'You are/were one of the top one hundred richest people in the world!')
     INSERT INTO Achievement (AchievementId, Name, [Description]) values (11, '$10 spender', 'You gained $10 in one purchase!')
     INSERT INTO Achievement (AchievementId, Name, [Description]) values (12, '$100 spender', 'You gained $100 in one purchase!')
     INSERT INTO Achievement (AchievementId, Name, [Description]) values (13, '$1000 spender', 'You gained $1,000 in one purchase!')
@@ -107,7 +107,7 @@ END
 IF object_id('PersonAchievement', 'U') IS NULL
 BEGIN
     CREATE TABLE [dbo].[PersonAchievement](
-        [PersonId] [int] NOT NULL FOREIGN KEY REFERENCES Person(PersonId),
+        [PersonId] [int] NOT NULL FOREIGN KEY REFERENCES Person(GoogleId),
         [AchievementId] [int] NOT NULL FOREIGN KEY REFERENCES Achievement(AchievementId),
     	[InsertDate] [dateTime] NOT NULL CONSTRAINT DF_PersonAchievement_InsertDate_GETDATE DEFAULT GETDATE()
     )
@@ -140,9 +140,9 @@ BEGIN
     	SET NOCOUNT ON;
     	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
 
-        SELECT p.[PersonId], [Name], [Wealth], [Rank], p.[InsertDate], p.[UpdateDate]
+        SELECT p.[GoogleId], [Name], [Wealth], [Rank], p.[InsertDate], p.[UpdateDate]
     	FROM Person p
-		JOIN PersonWealth pw ON p.PersonId = pw.PersonId
+		JOIN PersonWealth pw ON p.PersonId = pw.GoogleId
 		WHERE pw.RankTypeId = @RankTypeId
     	ORDER BY [Rank] ASC
     	OFFSET @offset ROWS FETCH NEXT @perPage ROWS ONLY
@@ -154,7 +154,7 @@ IF (object_id('GetPersonAndSurroundingPeople', 'P') IS NULL AND object_id('GetPe
 BEGIN
     exec('
     CREATE Proc [dbo].GetPersonAndSurroundingPeople (
-        @personId int,
+        @googleId varchar(32),
         @range int = 5,
 	    @rankTypeId int = 1
     )
@@ -162,12 +162,17 @@ BEGIN
     BEGIN
     	SET NOCOUNT ON;
     	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
-            
+                        
+        declare @personId int;
+        SELECT @personId = [PersonId]
+    	FROM Person
+		WHERE [GoogleId] = @GoogleId
+
         DECLARE @numberedPerson table(PersonId INT, [RowNumber] INT); 
         INSERT INTO @numberedPerson
-        SELECT p.[PersonId], ROW_NUMBER() OVER (ORDER BY pw.[Rank] ASC) AS [RowNumber]
+        SELECT p.[GoogleId], ROW_NUMBER() OVER (ORDER BY pw.[Rank] ASC) AS [RowNumber]
         FROM Person p
-		JOIN PersonWealth pw ON p.PersonId = pw.PersonId
+		JOIN PersonWealth pw ON p.PersonId = pw.GoogleId
 		WHERE pw.RankTypeId = @RankTypeId;
         
         DECLARE @from int;
@@ -180,10 +185,10 @@ BEGIN
         FROM @numberedPerson np
         WHERE np.[PersonId] = @personId
         
-        SELECT p.[PersonId], p.[Name], pw.[Wealth], pw.[Rank], p.[InsertDate], p.[UpdateDate]
+        SELECT p.[GoogleId], p.[Name], pw.[Wealth], pw.[Rank], p.[InsertDate], p.[UpdateDate]
         FROM Person p
-        JOIN @numberedPerson np ON np.[PersonId] = p.[PersonId]
-		JOIN PersonWealth pw ON p.PersonId = pw.PersonId
+        JOIN @numberedPerson np ON np.[PersonId] = p.[GoogleId]
+		JOIN PersonWealth pw ON p.PersonId = pw.GoogleId
 		WHERE pw.RankTypeId = @RankTypeId
         AND   np.RowNumber BETWEEN @from AND @to
         ORDER BY pw.[Rank] ASC
@@ -195,16 +200,21 @@ IF (object_id('GetPerson', 'P') IS NULL AND object_id('GetPerson', 'PC') IS NULL
 BEGIN
     exec('
     CREATE Proc [dbo].GetPerson (
-    	@personId int
+    	@googleId varchar(32)
     )
     AS
     BEGIN
     	SET NOCOUNT ON;
     	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
     
-        SELECT [PersonId], [Name], [InsertDate], [UpdateDate]
+        declare @personId int;
+        SELECT @personId = [PersonId]
     	FROM Person
-		WHERE PersonId = @personId
+		WHERE [GoogleId] = @GoogleId
+
+        SELECT [GoogleId], [Name], [InsertDate], [UpdateDate]
+    	FROM Person
+		WHERE [PersonId] = @personId
 
 		EXEC GetWealth @personId
 		EXEC GetPayments @personId
@@ -224,13 +234,13 @@ BEGIN
     	SET NOCOUNT ON;
     	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
     
-        declare @personId int;
+        declare @googleId varchar(32);
 
-        SELECT @personId = [PersonId]
+        SELECT @googleId = [GoogleId]
     	FROM Person
 		WHERE Name = @name
 
-		EXEC GetPerson @personId
+		EXEC GetPerson @googleId
     END
 	')
 END
@@ -239,13 +249,18 @@ IF (object_id('GetWealth', 'P') IS NULL AND object_id('GetWealth', 'PC') IS NULL
 BEGIN    
     exec('
     Create Proc [dbo].GetWealth(
-    	@personId int
+    	@googleId varchar(32)
     )
     AS
     BEGIN
     	SET NOCOUNT ON;
     	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
     
+        declare @personId int;
+        SELECT @personId = [PersonId]
+    	FROM Person
+		WHERE [GoogleId] = @GoogleId
+
         SELECT pw.[RankTypeId], rt.[Name] as RankTypeName, pw.[Wealth], pw.[Rank], pw.[InsertDate], pw.[UpdateDate]
     	FROM PersonWealth pw
 		JOIN [dbo].[RankType] rt on pw.[RankTypeId] = rt.[RankTypeId]
@@ -258,7 +273,7 @@ IF (object_id('GetPayments', 'P') IS NULL AND object_id('GetPayments', 'PC') IS 
 BEGIN    
     exec('
     Create Proc [dbo].GetPayments(
-    	@personId int,
+    	@googleId varchar(32),
         @offset int = 0,
         @perPage int = 2147483647
     )
@@ -267,7 +282,12 @@ BEGIN
     	SET NOCOUNT ON;
     	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
     
-        SELECT [PaymentId], [PersonId], [Amount], [InsertDate], [UpdateDate]
+        declare @personId int;
+        SELECT @personId = [PersonId]
+    	FROM Person
+		WHERE [GoogleId] = @GoogleId
+
+        SELECT [PaymentId], @googleId as [GoogleId], [Amount], [InsertDate], [UpdateDate]
     	FROM Payment
 		WHERE personId = @personId
     	ORDER BY [InsertDate] DESC
@@ -280,13 +300,18 @@ IF (object_id('GetAchievements', 'P') IS NULL AND object_id('GetAchievements', '
 BEGIN    
     exec('
 	Create Proc [dbo].GetAchievements(
-    	@personId int
+    	@googleId varchar(32)
     )
     AS
     BEGIN
     	SET NOCOUNT ON;
     	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
     
+        declare @personId int;
+        SELECT @personId = [PersonId]
+    	FROM Person
+		WHERE [GoogleId] = @GoogleId
+
         SELECT a.[AchievementId] as [AchievementType], a.[Name], a.[Description], pa.[InsertDate]
     	FROM [dbo].[Achievement] a
 		JOIN [dbo].[PersonAchievement] pa ON a.[AchievementId] = pa.[AchievementId]
@@ -346,12 +371,17 @@ IF (object_id('SetRank', 'P') IS NULL AND object_id('SetRank', 'PC') IS NULL)
 BEGIN    
     exec('
     CREATE Proc [dbo].SetRank(
-    	@personId int
+    	@googleId varchar(32)
     )
     AS
     BEGIN	
     	SET NOCOUNT ON;
     	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+
+        declare @personId int;
+        SELECT @personId = [PersonId]
+    	FROM Person
+		WHERE [GoogleId] = @GoogleId
 
         DECLARE @rankings table(PersonId INT, [Rank] INT, [rankTypeId] INT); 
 
@@ -390,7 +420,7 @@ BEGIN
 		SET [PersonWealth].[Rank] = r.[Rank]
 		FROM @rankings r
 		WHERE PersonWealth.rankTypeId = r.rankTypeId
-		AND PersonWealth.[PersonId] = r.[PersonId]; 
+		AND PersonWealth.[PersonId] = r.[GoogleId]; 
     END
 	')
 END
@@ -399,14 +429,15 @@ IF (object_id('CreatePerson', 'P') IS NULL AND object_id('CreatePerson', 'PC') I
 BEGIN
     exec('
     Create Proc [dbo].CreatePerson (
-	    @Name varchar(32)
+	    @Name varchar(32),
+		@googleId varchar(32)
     )
     AS
     BEGIN
     	SET NOCOUNT ON;
     	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
 
-        INSERT INTO [dbo].[Person] ([Name]) VALUES (@Name);
+        INSERT INTO [dbo].[Person] ([Name], [GoogleId]) VALUES (@Name, @googleId);
 
 		DECLARE @personId int;
 		SELECT @personId = SCOPE_IDENTITY();
@@ -415,7 +446,7 @@ BEGIN
 		SELECT @personId, [RankTypeId], 0, 0
 		FROM RankType
 
-		SELECT @personId as [PersonId];
+		SELECT @googleId as [GoogleId];
     END
 	')
 END
@@ -424,7 +455,7 @@ IF (object_id('CreatePayment', 'P') IS NULL AND object_id('CreatePayment', 'PC')
 BEGIN    
     exec('
     Create Proc [dbo].CreatePayment(
-    	@personId int,
+    	@googleId varchar(32),
 		@amount decimal(15,2)
     )
     AS
@@ -432,6 +463,11 @@ BEGIN
     	SET NOCOUNT ON;
     	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
     
+        declare @personId int;
+        SELECT @personId = [PersonId]
+    	FROM Person
+		WHERE [GoogleId] = @GoogleId
+
 	    INSERT INTO [dbo].[Payment] (PersonId,Amount)
 		VALUES (@personId, @amount)
 
@@ -448,7 +484,7 @@ IF (object_id('CreateAchievement', 'P') IS NULL AND object_id('CreateAchievement
 BEGIN    
     exec('
     Create Proc [dbo].CreateAchievement(
-    	@personId int,
+    	@googleId varchar(32),
 		@achievementId int
     )
     AS
@@ -456,6 +492,11 @@ BEGIN
     	SET NOCOUNT ON;
     	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
     
+        declare @personId int;
+        SELECT @personId = [PersonId]
+    	FROM Person
+		WHERE [GoogleId] = @GoogleId
+
 	    INSERT INTO [dbo].[PersonAchievement] (PersonId, AchievementId) VALUES (@personId, @achievementId)
     END
 	')
@@ -488,13 +529,13 @@ END
             }
         }
 
-        public Person GetPerson(int personId)
+        public Person GetPerson(string googleId)
         {
             Person person;
             using (DbConnection connection = new SqlConnection(_connectionString))
             {
                 var results =
-                    connection.QueryMultiple("GetPerson", new { personId }, commandType: CommandType.StoredProcedure);
+                    connection.QueryMultiple("GetPerson", new { googleId }, commandType: CommandType.StoredProcedure);
 
                 person = results.Read<Person>().FirstOrDefault();
                 if (person != null)
@@ -507,7 +548,7 @@ END
 
             return person;
         }
-        public Person GetPerson(string name)
+        public Person GetPersonByName(string name)
         {
             Person person;
             using (DbConnection connection = new SqlConnection(_connectionString))
@@ -527,27 +568,26 @@ END
             return person;
         }
 
-        public Person CreatePerson(string name)
+        public Person CreatePerson(string name, string googleId)
         {
-            Person person = new Person { Name = name };
+            Person person = new Person { Name = name, GoogleId = googleId};
             using (DbConnection connection = new SqlConnection(_connectionString))
             {
                 var results =
-                    connection.Query<int>("CreatePerson", new { name }, commandType: CommandType.StoredProcedure);
-                person.PersonId = results.First();
+                    connection.Query<string>("CreatePerson", new { name, googleId }, commandType: CommandType.StoredProcedure);
                 SetRanks();
             }
 
             return person;
         }
 
-        public List<Payment> GetPayments(int personId)
+        public List<Payment> GetPayments(string googleId)
         {
             List<Payment> payments;
             using (DbConnection connection = new SqlConnection(_connectionString))
             {
                 var results =
-                    connection.Query<Payment>("GetPayments", new { personId }, commandType: CommandType.StoredProcedure);
+                    connection.Query<Payment>("GetPayments", new { googleId }, commandType: CommandType.StoredProcedure);
 
                 payments = results.ToList();
             }
@@ -555,22 +595,22 @@ END
             return payments;
         }
 
-        public void CreatePayment(int personId, Decimal amount)
+        public void CreatePayment(string googleId, Decimal amount)
         {
             using (DbConnection connection = new SqlConnection(_connectionString))
             {
-                connection.Execute("CreatePayment", new { personId, amount }, commandType: CommandType.StoredProcedure);
+                connection.Execute("CreatePayment", new { googleId, amount }, commandType: CommandType.StoredProcedure);
                 SetRanks();
             }
         }
 
-        public List<Achievement> GetAchievements(int personId)
+        public List<Achievement> GetAchievements(string googleId)
         {
             List<Achievement> achievements;
             using (DbConnection connection = new SqlConnection(_connectionString))
             {
                 var results =
-                    connection.Query<Achievement>("GetAchievements", new { personId }, commandType: CommandType.StoredProcedure);
+                    connection.Query<Achievement>("GetAchievements", new { googleId }, commandType: CommandType.StoredProcedure);
 
                 achievements = results.ToList();
             }
@@ -578,11 +618,11 @@ END
             return achievements;
         }
 
-        public void CreateAchievement(int personId, AchievementType achievementId)
+        public void CreateAchievement(string googleId, AchievementType achievementId)
         {
             using (DbConnection connection = new SqlConnection(_connectionString))
             {
-                connection.Execute("CreateAchievement", new { personId, @achievementId = (int)achievementId }, commandType: CommandType.StoredProcedure);
+                connection.Execute("CreateAchievement", new { googleId, @achievementId = (int)achievementId }, commandType: CommandType.StoredProcedure);
             }
         }
 
@@ -595,21 +635,21 @@ END
             }
         }
 
-        public List<Person> GetPersonAndSurroundingPeople(int personId, int range, RankType rankType = RankType.AllTime)
+        public List<Person> GetPersonAndSurroundingPeople(string googleId, int range, RankType rankType = RankType.AllTime)
         {
             using (DbConnection connection = new SqlConnection(_connectionString))
             {
-                var results = connection.Query<Person>("GetPersonAndSurroundingPeople", new { personId, range }, commandType: CommandType.StoredProcedure);
+                var results = connection.Query<Person>("GetPersonAndSurroundingPeople", new { googleId, range }, commandType: CommandType.StoredProcedure);
 
                 return results.ToList();
             }
         }
 
-        public void SetRank(int personId)
+        public void SetRank(string googleId)
         {
             using (DbConnection connection = new SqlConnection(_connectionString))
             {
-                connection.Execute("SetRank", new { personId }, commandType: CommandType.StoredProcedure);
+                connection.Execute("SetRank", new { googleId }, commandType: CommandType.StoredProcedure);
             }
         }
 

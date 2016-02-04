@@ -8,7 +8,7 @@ namespace Domain
 {
     public class Person
     {
-        public int PersonId { get; set; }
+        public string GoogleId { get; set; }
         public string Name { get; set; }
         public int Rank { get; set; }
         public decimal Wealth { get; set; }

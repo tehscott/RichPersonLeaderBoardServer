@@ -43,7 +43,7 @@ namespace Processor
             var topDay = _logic.GetPersons(rankType, 1).FirstOrDefault();
             if (topDay != null)
             {
-                _logic.CreateAchievement(topDay.PersonId, richestFullDay);
+                _logic.CreateAchievement(topDay.GoogleId, richestFullDay);
             }
         }
     }

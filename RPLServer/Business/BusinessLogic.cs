@@ -27,31 +27,31 @@ namespace Business
             Dao.ResetWealth(rankType);
         }
 
-        public Person GetPerson(int personId)
+        public Person GetPerson(string googleId)
         {
-            return Dao.GetPerson(personId);
+            return Dao.GetPerson(googleId);
         }
 
-        public Person CreatePerson(string name)
+        public Person CreatePerson(string name, string googleId)
         {
-            return Dao.CreatePerson(name);
+            return Dao.CreatePerson(name, googleId);
         }
 
-        public List<Payment> GetPayments(int personId)
+        public List<Payment> GetPayments(string googleId)
         {
-            return Dao.GetPayments(personId);
+            return Dao.GetPayments(googleId);
         }
 
-        public Person GetPerson(string name)
+        public Person GetPersonByName(string name)
         {
             return Dao.GetPerson(name);
         }
 
-        public void CreatePayment(int personId, Decimal amount)
+        public void CreatePayment(string googleId, Decimal amount)
         {
-            Dao.CreatePayment(personId, amount);
+            Dao.CreatePayment(googleId, amount);
 
-            var person = Dao.GetPerson(personId);
+            var person = Dao.GetPerson(googleId);
             if (person.Rank <= 1 && person.Rank >= 1)
             {
                 CreateAchievement(person, AchievementType.Richest);
@@ -102,27 +102,27 @@ namespace Business
             }
         }
 
-        public List<Achievement> GetAchievements(int personId)
+        public List<Achievement> GetAchievements(string googleId)
         {
-            return Dao.GetAchievements(personId);
+            return Dao.GetAchievements(googleId);
         }
 
-        public void CreateAchievement(int personId, AchievementType achievementType)
+        public void CreateAchievement(string googleId, AchievementType achievementType)
         {
-            CreateAchievement(Dao.GetPerson(personId), achievementType);
+            CreateAchievement(Dao.GetPerson(googleId), achievementType);
         }
 
         public void CreateAchievement(Person person, AchievementType achievementType)
         {
             if (person.Achievements.All(achievement => achievement.AchievementType != achievementType))
             {
-                Dao.CreateAchievement(person.PersonId, achievementType);
+                Dao.CreateAchievement(person.GoogleId, achievementType);
             }
         }
 
-        public List<Person> GetPersonAndSurroundingPeople(int personId, int range, RankType rankType)
+        public List<Person> GetPersonAndSurroundingPeople(string googleId, int range, RankType rankType)
         {
-            return Dao.GetPersonAndSurroundingPeople(personId, range, rankType);
+            return Dao.GetPersonAndSurroundingPeople(googleId, range, rankType);
         }
 
         public DateTime GetLastResetDate()
