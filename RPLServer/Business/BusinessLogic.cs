@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Data;
@@ -8,6 +9,32 @@ using Domain;
 
 namespace Business
 {
+    public class GooglePlayVerification
+    {
+        private const string PublicKey = "";
+        public static bool Verify(string message, string base64Signature)
+        {
+            // By default the result is false
+            bool result = false;
+            try
+            {
+                // Create the provider and load the KEY
+                RSACryptoServiceProvider provider = new RSACryptoServiceProvider();
+                provider.FromXmlString(PublicKey);
+
+                // The signature is supposed to be encoded in base64 and the SHA1 checksum
+                // Of the message is computed against the UTF-8 representation of the 
+                // message
+                byte[] signature = Convert.FromBase64String(base64Signature);
+                SHA1Managed sha = new SHA1Managed();
+                byte[] data = Encoding.UTF8.GetBytes(message);
+
+                result = provider.VerifyData(data, sha, signature);
+            }
+            catch (Exception /* e */) { /* TODO: add some kind of logging here */}
+            return result;
+        }
+    }
     public class BusinessLogic
     {
         private IDao Dao { get; }

@@ -78,5 +78,13 @@ namespace Server.Controllers
         {
             return Json(Business.GetPersonAndSurroundingPeople(id, range, rankType), JsonRequestBehavior.AllowGet);
         }
+
+        [HttpPost]
+        public ActionResult RecordPurchase(PurchaseRecord record)
+        {
+            bool success = false;
+
+            return Json(success);
+        }
     }
 }
