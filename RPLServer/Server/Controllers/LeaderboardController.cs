@@ -83,7 +83,9 @@ namespace Server.Controllers
         public ActionResult RecordPurchase(PurchaseRecord record)
         {
             bool success = false;
-
+            //verify correctness of thing
+            //convert string to object
+            //store purchase in db
             return Json(success);
         }
     }
