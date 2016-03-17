@@ -83,9 +83,12 @@ namespace Server.Controllers
         public ActionResult RecordPurchase(PurchaseRecord record)
         {
             bool success = false;
-            //verify correctness of thing
-            //convert string to object
-            //store purchase in db
+            var correct = GooglePlayVerification.Verify(record.INAPP_PURCHASE_DATA, record.INAPP_DATA_SIGNATURE);
+            if (correct)
+            {
+                //convert string to object
+                //store purchase in db
+            }
             return Json(success);
         }
     }
