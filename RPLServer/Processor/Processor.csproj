@@ -31,9 +31,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Domain">
-      <HintPath>..\Server\Bin\Domain.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -56,6 +53,10 @@
     <ProjectReference Include="..\Data\Data.csproj">
       <Project>{789963c3-6fa7-4f4d-bc31-f164b79b8de8}</Project>
       <Name>Data</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Domain\Domain.csproj">
+      <Project>{e98b4897-b358-40b4-ad5a-e67a82db1d6c}</Project>
+      <Name>Domain</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
