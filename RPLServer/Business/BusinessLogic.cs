@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Data;
 using Domain;
+using Newtonsoft.Json;
 
 namespace Business
 {
@@ -46,7 +47,7 @@ namespace Business
             return Dao.GetPerson(name);
         }
 
-        public void CreatePayment(string googleId, Decimal amount)
+        public void CreatePayment(string googleId, decimal amount)
         {
             Dao.CreatePayment(googleId, amount);
 
@@ -101,6 +102,29 @@ namespace Business
             }
         }
 
+        public void CreatePayment(PurchaseData purchaseData)
+        {
+            CreatePayment(JsonConvert.DeserializeObject<dynamic>(purchaseData.developerPayload).googleId, GetAmount(purchaseData.productId));
+        }
+
+        /// <summary>
+        /// TODO: fill this out!
+        /// </summary>
+        /// <param name="productId"></param>
+        /// <returns></returns>
+        private decimal GetAmount(string productId)
+        {
+            switch (productId)
+            {
+                case "1":
+                    return 1;
+                case "2":
+                    return 2;
+                default:
+                    return 0m;
+            }
+        }
+
         public List<Achievement> GetAchievements(string googleId)
         {
             return Dao.GetAchievements(googleId);
@@ -127,6 +151,17 @@ namespace Business
         public DateTime GetLastResetDate()
         {
             return Dao.GetLastResetDate();
+        }
+
+        public PurchaseData VerifyPurchase(PurchaseRecord record)
+        {
+            PurchaseData purchaseData = null;
+            var correct = GooglePlayVerification.Verify(record.INAPP_PURCHASE_DATA, record.INAPP_DATA_SIGNATURE);
+            if (correct)
+            {
+                 purchaseData = JsonConvert.DeserializeObject<PurchaseData>(record.INAPP_PURCHASE_DATA);
+            }
+            return purchaseData;
         }
     }
 }

@@ -55,6 +55,10 @@ namespace Server.Controllers
             return Json(Business.GetPayments(id), JsonRequestBehavior.AllowGet);
         }
 
+        /// <summary>
+        /// TODO: this method should probably be AXED, however it is useful for debugging.
+        /// </summary>
+        /// <param name="request"></param>
         [HttpPost]
         public void Payments(CreatePaymentRequest request)
         {
@@ -82,14 +86,14 @@ namespace Server.Controllers
         [HttpPost]
         public ActionResult RecordPurchase(PurchaseRecord record)
         {
-            bool success = false;
-            var correct = GooglePlayVerification.Verify(record.INAPP_PURCHASE_DATA, record.INAPP_DATA_SIGNATURE);
-            if (correct)
+            var purchaseData = Business.VerifyPurchase(record);
+
+            if (purchaseData != null)
             {
-                //convert string to object
-                //store purchase in db
+                Business.CreatePayment(purchaseData);
             }
-            return Json(success);
+
+            return Json(purchaseData != null);
         }
     }
 }
