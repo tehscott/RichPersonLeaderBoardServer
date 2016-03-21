@@ -1,9 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Data;
 using Domain;
+using Google.Apis.AndroidPublisher.v2;
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Requests;
+using Google.Apis.Services;
 using Newtonsoft.Json;
 
 namespace Business
@@ -104,7 +110,14 @@ namespace Business
 
         public void CreatePayment(PurchaseData purchaseData)
         {
-            CreatePayment(JsonConvert.DeserializeObject<dynamic>(purchaseData.developerPayload).googleId, GetAmount(purchaseData.productId));
+            var data = JsonConvert.DeserializeObject<dynamic>(purchaseData.developerPayload);
+
+            //TODO: consume the item through google
+            //If the item was consumed successfully
+            //{
+            CreatePayment(data.googleId, GetAmount(purchaseData.productId));
+            Dao.RecordPurchase(data.googleId, purchaseData);
+            //}
         }
 
         /// <summary>
@@ -159,8 +172,53 @@ namespace Business
             var correct = GooglePlayVerification.Verify(record.INAPP_PURCHASE_DATA, record.INAPP_DATA_SIGNATURE);
             if (correct)
             {
-                 purchaseData = JsonConvert.DeserializeObject<PurchaseData>(record.INAPP_PURCHASE_DATA);
+                purchaseData = JsonConvert.DeserializeObject<PurchaseData>(record.INAPP_PURCHASE_DATA);
             }
+
+            //TODO: Go to google and verify the purchse
+            var apikey = "AIzaSyCDZ0NsC1dEfUVNmVr80kXe9_hDiVgXVTI";
+            string serviceAccountEmail = "306227090509-compute@developer.gserviceaccount.com";//"your-mail-in-developer-console@developer.gserviceaccount.com";
+            var applicationName = "Rich Person Leaderboard";
+            var packageName = "com.mattandmikeandscott.richpersonleaderboard";
+            var productId = purchaseData.productId;//"your-inapp-item-id";
+            var token = purchaseData.purchaseToken;//"purchase-token";
+
+            ServiceAccountCredential credential = new ServiceAccountCredential(
+                new ServiceAccountCredential.Initializer(serviceAccountEmail)
+                {
+                    Scopes = new[] { "https://www.googleapis.com/auth/androidpublisher" }
+                }.FromPrivateKey(apikey));
+            
+            var service = new AndroidPublisherService(
+                new BaseClientService.Initializer()
+                {
+                    HttpClientInitializer = credential,
+                    ApplicationName = applicationName //"GooglePlay API Sample",
+                });
+
+            var request = service.Purchases.Products.Get(packageName, productId, token);
+            var purchaseState = request.Execute();
+
+            Console.WriteLine(JsonConvert.SerializeObject(purchaseState));
+
+
+            //PurchasesResource.ProductsResource.GetRequest request = new PurchasesResource.ProductsResource.GetRequest(clientService, packageName, productId, token);
+            //var certificate = new X509Certificate2(@"physical-path-to-your-key\key.p12", "notasecret", X509KeyStorageFlags.Exportable);
+            // try catch this function because if you input wrong params ( wrong token) google will return error.
+            //var request = service.Inappproducts.List(packageName);
+            //var purchaseState = request.Execute();
+            //var request = service.Purchases.Products.Get(packageName, itemId, purchaseToken);
+            //var auth = new OAuth2Authenticator<WebServerClient>(provider, GetAuthorization);
+            //var service = new AndroidPublisherService(
+            //    new BaseClientService.Initializer()
+            //    {
+            //        Authenticator = auth,
+            //        ApplicationName = applicationName
+            //    });
+
+            //TODO: check to make sure that the OrderId is a unique value that I have not yet seen
+
+
             return purchaseData;
         }
     }

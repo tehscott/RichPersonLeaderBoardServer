@@ -570,7 +570,7 @@ END
 
         public Person CreatePerson(string name, string googleId)
         {
-            Person person = new Person { Name = name, GoogleId = googleId};
+            Person person = new Person { Name = name, GoogleId = googleId };
             using (DbConnection connection = new SqlConnection(_connectionString))
             {
                 var results =
@@ -632,6 +632,26 @@ END
             {
                 return connection.Query<DateTime>("GetLastResetDate", new { },
                     commandType: CommandType.StoredProcedure).First();
+            }
+        }
+
+        public void RecordPurchase(string googleId, PurchaseData purchaseData)
+        {
+            using (DbConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Execute("RecordPurchase", new
+                {
+                    googleId,
+                    purchaseData.autoRenewing,
+                    purchaseData.developerPayload,
+                    purchaseData.orderId,
+                    purchaseData.packageName,
+                    purchaseData.productId,
+                    purchaseData.purchaseState,
+                    purchaseData.purchaseTime,
+                    purchaseData.purchaseToken
+                },
+                    commandType: CommandType.StoredProcedure);
             }
         }
 
