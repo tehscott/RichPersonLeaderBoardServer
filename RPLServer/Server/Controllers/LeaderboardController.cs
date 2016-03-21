@@ -86,6 +86,9 @@ namespace Server.Controllers
         [HttpPost]
         public ActionResult RecordPurchase(PurchaseRecord record)
         {
+
+
+
             var purchaseData = Business.VerifyPurchase(record);
 
             if (purchaseData != null)

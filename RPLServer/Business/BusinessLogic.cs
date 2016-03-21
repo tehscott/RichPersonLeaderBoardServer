@@ -120,19 +120,28 @@ namespace Business
             //}
         }
 
-        /// <summary>
-        /// TODO: fill this out!
-        /// </summary>
-        /// <param name="productId"></param>
-        /// <returns></returns>
         private decimal GetAmount(string productId)
         {
             switch (productId)
             {
-                case "1":
+                case "com.mattandmikeandscott.richpersonleaderboard.purchaseone":
                     return 1;
-                case "2":
+                case "com.mattandmikeandscott.richpersonleaderboard.purchasetwo":
                     return 2;
+                case "com.mattandmikeandscott.richpersonleaderboard.purchasethree":
+                    return 3;
+                case "com.mattandmikeandscott.richpersonleaderboard.purchasefour":
+                    return 4;
+                case "com.mattandmikeandscott.richpersonleaderboard.purchasefive":
+                    return 5;
+                case "com.mattandmikeandscott.richpersonleaderboard.purchaseten":
+                    return 10;
+                case "com.mattandmikeandscott.richpersonleaderboard.purchasetwenty":
+                    return 20;
+                case "com.mattandmikeandscott.richpersonleaderboard.purchasefifty":
+                    return 50;
+                case "com.mattandmikeandscott.richpersonleaderboard.purchaseonehundred":
+                    return 100;
                 default:
                     return 0m;
             }
@@ -188,7 +197,7 @@ namespace Business
                 {
                     Scopes = new[] { "https://www.googleapis.com/auth/androidpublisher" }
                 }.FromPrivateKey(apikey));
-            
+
             var service = new AndroidPublisherService(
                 new BaseClientService.Initializer()
                 {
@@ -202,19 +211,19 @@ namespace Business
             Console.WriteLine(JsonConvert.SerializeObject(purchaseState));
 
 
-            //PurchasesResource.ProductsResource.GetRequest request = new PurchasesResource.ProductsResource.GetRequest(clientService, packageName, productId, token);
-            //var certificate = new X509Certificate2(@"physical-path-to-your-key\key.p12", "notasecret", X509KeyStorageFlags.Exportable);
-            // try catch this function because if you input wrong params ( wrong token) google will return error.
-            //var request = service.Inappproducts.List(packageName);
-            //var purchaseState = request.Execute();
-            //var request = service.Purchases.Products.Get(packageName, itemId, purchaseToken);
-            //var auth = new OAuth2Authenticator<WebServerClient>(provider, GetAuthorization);
-            //var service = new AndroidPublisherService(
-            //    new BaseClientService.Initializer()
-            //    {
-            //        Authenticator = auth,
-            //        ApplicationName = applicationName
-            //    });
+            ////PurchasesResource.ProductsResource.GetRequest request = new PurchasesResource.ProductsResource.GetRequest(clientService, packageName, productId, token);
+            ////var certificate = new X509Certificate2(@"physical-path-to-your-key\key.p12", "notasecret", X509KeyStorageFlags.Exportable);
+            //// try catch this function because if you input wrong params ( wrong token) google will return error.
+            ////var request = service.Inappproducts.List(packageName);
+            ////var purchaseState = request.Execute();
+            ////var request = service.Purchases.Products.Get(packageName, itemId, purchaseToken);
+            ////var auth = new OAuth2Authenticator<WebServerClient>(provider, GetAuthorization);
+            ////var service = new AndroidPublisherService(
+            ////    new BaseClientService.Initializer()
+            ////    {
+            ////        Authenticator = auth,
+            ////        ApplicationName = applicationName
+            ////    });
 
             //TODO: check to make sure that the OrderId is a unique value that I have not yet seen
 
