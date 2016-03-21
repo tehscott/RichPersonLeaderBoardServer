@@ -16,5 +16,6 @@ namespace Domain
         List<Achievement> GetAchievements(string googleId);
         void CreateAchievement(string googleId, AchievementType achievementType);
         DateTime GetLastResetDate();
+        void RecordPurchase(string googleId, PurchaseData purchaseData);
     }
 }
