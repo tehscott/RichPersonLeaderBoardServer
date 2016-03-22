@@ -98,6 +98,10 @@
   <ItemGroup>
     <Content Include="Views\web.config" />
     <Content Include="packages.config" />
+    <None Include="Properties\PublishProfiles\RichPersonLeaderBoardServer - FTP %282%29.pubxml" />
+    <None Include="Properties\PublishProfiles\RichPersonLeaderBoardServer - FTP.pubxml" />
+    <None Include="Properties\PublishProfiles\RichPersonLeaderBoardServer - Web Deploy %282%29.pubxml" />
+    <None Include="Properties\PublishProfiles\RichPersonLeaderBoardServer - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\RichPersonLeaderBoardServer.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>

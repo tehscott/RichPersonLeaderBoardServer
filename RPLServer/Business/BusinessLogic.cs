@@ -177,28 +177,28 @@ namespace Business
 
         public PurchaseData VerifyPurchase(PurchaseRecord record)
         {
-            PurchaseData purchaseData = null;
-            var correct = GooglePlayVerification.Verify(record.INAPP_PURCHASE_DATA, record.INAPP_DATA_SIGNATURE);
-            if (correct)
-            {
-                purchaseData = JsonConvert.DeserializeObject<PurchaseData>(record.INAPP_PURCHASE_DATA);
-            }
-
             try
             {
+                if (!GooglePlayVerification.Verify(record.INAPP_PURCHASE_DATA, record.INAPP_DATA_SIGNATURE))
+                {
+                    //TODO: log this - the person sent a bad request. it should be noted
+                    return null;
+                }
+
                 var apikey = "AIzaSyCDZ0NsC1dEfUVNmVr80kXe9_hDiVgXVTI";
-                string serviceAccountEmail = "richpersonleaderboard@api-6003077209940707168-964527.iam.gserviceaccount.com";//"306227090509-compute@developer.gserviceaccount.com";//"your-mail-in-developer-console@developer.gserviceaccount.com";
+                string serviceAccountEmail =
+                    "richpersonleaderboard@api-6003077209940707168-964527.iam.gserviceaccount.com";
                 var applicationName = "Rich Person Leaderboard";
                 var packageName = "com.mattandmikeandscott.richpersonleaderboard";
-                var productId = purchaseData.productId;
-                var token = purchaseData.purchaseToken;
+                var productId = JsonConvert.DeserializeObject<PurchaseData>(record.INAPP_PURCHASE_DATA).productId;
+                var token = JsonConvert.DeserializeObject<PurchaseData>(record.INAPP_PURCHASE_DATA).purchaseToken;
                 var certificate = new X509Certificate2(@"key.p12", "notasecret", X509KeyStorageFlags.Exportable);
 
                 ServiceAccountCredential credential = new ServiceAccountCredential(
-                   new ServiceAccountCredential.Initializer(serviceAccountEmail)
-                   {
-                       Scopes = new[] { "https://www.googleapis.com/auth/androidpublisher" }
-                   }.FromCertificate(certificate));
+                    new ServiceAccountCredential.Initializer(serviceAccountEmail)
+                    {
+                        Scopes = new[] { "https://www.googleapis.com/auth/androidpublisher" }
+                    }.FromCertificate(certificate));
 
                 var service = new AndroidPublisherService(
                     new BaseClientService.Initializer()
@@ -221,20 +221,21 @@ namespace Business
       "ETag":"\"o5gAPb6ySV14-48Jv5T-e_Ifp4s/M9QS9m5-BS77yf-C12pzS7Kf0TE\""
     }            */
 
-                //TODO: figure out if this is the correct way to verify the purchase.
-                if (purchaseState.PurchaseState != 0 || purchaseState.ConsumptionState != 0)
+                var result = JsonConvert.DeserializeObject<PurchaseData>(record.INAPP_PURCHASE_DATA);
+
+                if (purchaseState.PurchaseState == 0 &&
+                    purchaseState.ConsumptionState == 0 &&
+                    Dao.GetPurchase(result.orderId) == null)
                 {
-                    purchaseData = null;
+                    return result;
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                purchaseData = null;
+                //TODO: log this - the person sent a bad request, or google changed their interface. it should be noted
             }
 
-            //TODO: check to make sure that the OrderId is a unique value that I have not yet seen
-            
-            return purchaseData;
+            return null;
         }
     }
 }

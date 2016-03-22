@@ -28,20 +28,10 @@ namespace BusinessTests
         [Test]
         public void MakeSureThatVerifyIsCorrectWithCorrectData()
         {
-            //TODO: get the correct data for this
             Assert.IsTrue(new BusinessLogic().VerifyPurchase(new PurchaseRecord()
             {
-                INAPP_PURCHASE_DATA =
-@"{
-  'orderId': 'GPA.1396-2857-6702-22297',
-  'packageName': 'com.mattandmikeandscott.richpersonleaderboard',
-  'productId': 'com.mattandmikeandscott.richpersonleaderboard.purchaseone',
-  'purchaseTime': 1458617266174,
-  'purchaseState': 0,
-  'developerPayload': '3bd6aaf1-3d8b-4d95-97ab-3fd8012dce24',
-  'purchaseToken': 'ljbodpmmimkaaobfbainmbij.AO-J1OyPgMG5sTIaMqgdUTyTG1cc1D62Hv7iIqud7L_paUkVmv2IcAwDRiqWxHn-y7fNDavKhAxYUfGvJUduonuI7LUGNoSJhG7zjwV5z_Cgew2j7asJzQceUvC82EL33Bb67SaDvR4UsK9yVqdySp1Iu4zxOnWwR8EUplrEwGTTIlQHPjph0qL5-ddFzaxVGZ0JRQVC97C_jSjH4Gdl-IRPDyO5NVlQGA'
-}",
-                INAPP_DATA_SIGNATURE = "DEADBEEF==",
+                INAPP_PURCHASE_DATA = @"{'orderId':'GPA.1320-0782-4663-65250','packageName':'com.mattandmikeandscott.richpersonleaderboard','productId':'com.mattandmikeandscott.richpersonleaderboard.purchasetwo','purchaseTime':1458653994873,'purchaseState':0,'developerPayload':'1de62b5d-730b-4a35-9735-10feb8f08fe5','purchaseToken':'bilgohingaimhdgbbegodpln.AO-J1OyjNljyStDY4A7qUX042bgXvCcDx8CNkEapVLorK1XEuC9uaHpOBkee5pphaN1Nlw8atitLbXZdttssUzs39eK7gzOMdO22QQbNBHk5cmpqGwRkmYvHQVP3BuPakLly2jT1Ui4ZYs2PwnzbhouzshxjJzqGPuufwhKOVgiSg2-twJXiHkwxeTbzKNK5JJu7QCafIBM9VBuEhoZmlq2A_uHhut_5ng'}".Replace('\'', '"'),
+                INAPP_DATA_SIGNATURE = "TUD0v4A7e0uy7dYwKbr0iG1tM818m8k34lTDHfpTmykiR5k2ECFmrU9Eu8r6o9PTAxfh0BTKVwlV6VJbVU2JzifVIi+K1sGhTD2h0kbhMCIUQpjCO3geVZLE9tF17RYQEK/62NHO9czj4FzCX6mEkujC+czv6u8jpAYe4D8y4GeaKzF6aDI4ZsDR6qMBE84Ah3CZ0Zm20vbSgDKmG4G5SaN0vAjN7dOrjx5L1j8SZjkFs8JdOej0GAwdNAunQG5RjYefsnxJwyLwcDD5hC/7Z6+YIoujOiqfvfnQ1pxkgx0zNwTDBau2whRLzYEWoM0pUFWG+a+kK15bEUiFtdk25w==",
                 RESPONSE_CODE = "200"
             }) != null);
         }

@@ -668,6 +668,11 @@ END
             }
         }
 
+        public PurchaseRecord GetPurchase(string orderId)
+        {
+            throw new NotImplementedException();
+        }
+
         public List<Person> GetPersonAndSurroundingPeople(string googleId, int range, RankType rankType = RankType.AllTime)
         {
             using (DbConnection connection = new SqlConnection(_connectionString))
