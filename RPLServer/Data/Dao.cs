@@ -59,7 +59,7 @@ IF object_id('PersonWealth', 'U') IS NULL
 BEGIN
     create table [dbo].[PersonWealth](
 	[PersonWealthId] [int] NOT NULL PRIMARY KEY IDENTITY,
-	[PersonId] [int] NOT NULL FOREIGN KEY REFERENCES Person(GoogleId),
+	[PersonId] [int] NOT NULL FOREIGN KEY REFERENCES Person(personId),
 	RankTypeId int NOT NULL FOREIGN KEY REFERENCES RankType(RankTypeId),
 	Wealth DECIMAL(15,2) NOT NULL CONSTRAINT [DF_PersonWealth_Wealth]  DEFAULT ((0)),
 	[Rank] int NOT NULL CONSTRAINT [DF_PersonWealth_Rank]  DEFAULT ((0)),
@@ -68,11 +68,29 @@ BEGIN
 	)
 END
 
+IF object_id('Purchase', 'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[Purchase](
+        [PurchaseId] [int] NOT NULL PRIMARY KEY IDENTITY,
+        [GoogleId] [varchar](32) NOT NULL FOREIGN KEY REFERENCES Person(GoogleId),
+        [autoRenewing] bit NOT NULL,
+        [developerPayload] varchar(256) NOT NULL,
+        [orderId] varchar(256) NOT NULL,
+        [packageName] varchar(256) NOT NULL,
+        [productId] varchar(256) NOT NULL,
+        [purchaseState] int NOT NULL,
+        [purchaseTime] Datetime NOT NULL,
+        [purchaseToken] varchar(256) NOT NULL,
+        [InsertDate] [dateTime] NOT NULL CONSTRAINT DF_Purchase_InsertDate_GETDATE DEFAULT GETDATE(),
+        [UpdateDate] [dateTime] NOT NULL CONSTRAINT DF_Purchase_UpdateDate_GETDATE DEFAULT GETDATE()
+    )
+END
+
 IF object_id('Payment', 'U') IS NULL
 BEGIN
     CREATE TABLE [dbo].[Payment](
         [PaymentId] [int] NOT NULL PRIMARY KEY IDENTITY,
-        [PersonId] [int] NOT NULL FOREIGN KEY REFERENCES Person(GoogleId),
+        [GoogleId] [varchar](32) NOT NULL FOREIGN KEY REFERENCES Person(GoogleId),
         [Amount] [decimal](15,2) NOT NULL,
         [InsertDate] [dateTime] NOT NULL CONSTRAINT DF_Payment_InsertDate_GETDATE DEFAULT GETDATE(),
         [UpdateDate] [dateTime] NOT NULL CONSTRAINT DF_Payment_UpdateDate_GETDATE DEFAULT GETDATE()
@@ -107,7 +125,7 @@ END
 IF object_id('PersonAchievement', 'U') IS NULL
 BEGIN
     CREATE TABLE [dbo].[PersonAchievement](
-        [PersonId] [int] NOT NULL FOREIGN KEY REFERENCES Person(GoogleId),
+        [PersonId] [int] NOT NULL FOREIGN KEY REFERENCES Person(PersonId),
         [AchievementId] [int] NOT NULL FOREIGN KEY REFERENCES Achievement(AchievementId),
     	[InsertDate] [dateTime] NOT NULL CONSTRAINT DF_PersonAchievement_InsertDate_GETDATE DEFAULT GETDATE()
     )
@@ -142,7 +160,7 @@ BEGIN
 
         SELECT p.[GoogleId], [Name], [Wealth], [Rank], p.[InsertDate], p.[UpdateDate]
     	FROM Person p
-		JOIN PersonWealth pw ON p.PersonId = pw.GoogleId
+		JOIN PersonWealth pw ON p.PersonId = pw.PersonId
 		WHERE pw.RankTypeId = @RankTypeId
     	ORDER BY [Rank] ASC
     	OFFSET @offset ROWS FETCH NEXT @perPage ROWS ONLY
@@ -168,11 +186,11 @@ BEGIN
     	FROM Person
 		WHERE [GoogleId] = @GoogleId
 
-        DECLARE @numberedPerson table(PersonId INT, [RowNumber] INT); 
+        DECLARE @numberedPerson table(PersonId int, [RowNumber] INT); 
         INSERT INTO @numberedPerson
-        SELECT p.[GoogleId], ROW_NUMBER() OVER (ORDER BY pw.[Rank] ASC) AS [RowNumber]
+        SELECT p.[PersonId], ROW_NUMBER() OVER (ORDER BY pw.[Rank] ASC) AS [RowNumber]
         FROM Person p
-		JOIN PersonWealth pw ON p.PersonId = pw.GoogleId
+		JOIN PersonWealth pw ON p.PersonId = pw.PersonId
 		WHERE pw.RankTypeId = @RankTypeId;
         
         DECLARE @from int;
@@ -187,60 +205,11 @@ BEGIN
         
         SELECT p.[GoogleId], p.[Name], pw.[Wealth], pw.[Rank], p.[InsertDate], p.[UpdateDate]
         FROM Person p
-        JOIN @numberedPerson np ON np.[PersonId] = p.[GoogleId]
-		JOIN PersonWealth pw ON p.PersonId = pw.GoogleId
+        JOIN @numberedPerson np ON np.[PersonId] = p.[PersonId]
+		JOIN PersonWealth pw ON p.PersonId = pw.PersonId
 		WHERE pw.RankTypeId = @RankTypeId
         AND   np.RowNumber BETWEEN @from AND @to
         ORDER BY pw.[Rank] ASC
-    END
-	')
-END
-
-IF (object_id('GetPerson', 'P') IS NULL AND object_id('GetPerson', 'PC') IS NULL)
-BEGIN
-    exec('
-    CREATE Proc [dbo].GetPerson (
-    	@googleId varchar(32)
-    )
-    AS
-    BEGIN
-    	SET NOCOUNT ON;
-    	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
-    
-        declare @personId int;
-        SELECT @personId = [PersonId]
-    	FROM Person
-		WHERE [GoogleId] = @GoogleId
-
-        SELECT [GoogleId], [Name], [InsertDate], [UpdateDate]
-    	FROM Person
-		WHERE [PersonId] = @personId
-
-		EXEC GetWealth @personId
-		EXEC GetPayments @personId
-		EXEC GetAchievements @personId
-    END
-	')
-END
-
-IF (object_id('GetPersonByName', 'P') IS NULL AND object_id('GetPersonByName', 'PC') IS NULL)
-BEGIN
-    exec('
-    CREATE Proc [dbo].GetPersonByName (
-    	@name varchar(128)
-    )
-    AS
-    BEGIN
-    	SET NOCOUNT ON;
-    	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
-    
-        declare @googleId varchar(32);
-
-        SELECT @googleId = [GoogleId]
-    	FROM Person
-		WHERE Name = @name
-
-		EXEC GetPerson @googleId
     END
 	')
 END
@@ -269,33 +238,6 @@ BEGIN
 	')
 END
 
-IF (object_id('GetPayments', 'P') IS NULL AND object_id('GetPayments', 'PC') IS NULL)
-BEGIN    
-    exec('
-    Create Proc [dbo].GetPayments(
-    	@googleId varchar(32),
-        @offset int = 0,
-        @perPage int = 2147483647
-    )
-    AS
-    BEGIN
-    	SET NOCOUNT ON;
-    	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
-    
-        declare @personId int;
-        SELECT @personId = [PersonId]
-    	FROM Person
-		WHERE [GoogleId] = @GoogleId
-
-        SELECT [PaymentId], @googleId as [GoogleId], [Amount], [InsertDate], [UpdateDate]
-    	FROM Payment
-		WHERE personId = @personId
-    	ORDER BY [InsertDate] DESC
-    	OFFSET @offset ROWS FETCH NEXT @perPage ROWS ONLY
-    END
-	')
-END
-
 IF (object_id('GetAchievements', 'P') IS NULL AND object_id('GetAchievements', 'PC') IS NULL)
 BEGIN    
     exec('
@@ -317,6 +259,77 @@ BEGIN
 		JOIN [dbo].[PersonAchievement] pa ON a.[AchievementId] = pa.[AchievementId]
 		WHERE pa.personId = @personId
     	ORDER BY [InsertDate] DESC
+    END
+	')
+END
+
+IF (object_id('GetPayments', 'P') IS NULL AND object_id('GetPayments', 'PC') IS NULL)
+BEGIN    
+    exec('
+    Create Proc [dbo].GetPayments(
+    	@googleId varchar(32),
+        @offset int = 0,
+        @perPage int = 2147483647
+    )
+    AS
+    BEGIN
+    	SET NOCOUNT ON;
+    	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+
+        SELECT [PaymentId], @googleId as [GoogleId], [Amount], [InsertDate], [UpdateDate]
+    	FROM Payment
+		WHERE googleId = @googleId
+    	ORDER BY [InsertDate] DESC
+    	OFFSET @offset ROWS FETCH NEXT @perPage ROWS ONLY
+    END
+	')
+END
+
+IF (object_id('GetPerson', 'P') IS NULL AND object_id('GetPerson', 'PC') IS NULL)
+BEGIN
+    exec('
+    CREATE Proc [dbo].GetPerson (
+    	@googleId varchar(32)
+    )
+    AS
+    BEGIN
+    	SET NOCOUNT ON;
+    	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+    
+        declare @personId int;
+        SELECT @personId = [PersonId]
+    	FROM Person
+		WHERE [GoogleId] = @GoogleId
+
+        SELECT [GoogleId], [Name], [InsertDate], [UpdateDate]
+    	FROM Person
+		WHERE [PersonId] = @personId
+
+		EXEC GetWealth @googleId
+		EXEC GetPayments @googleId
+		EXEC GetAchievements @googleId
+    END
+	')
+END
+
+IF (object_id('GetPersonByName', 'P') IS NULL AND object_id('GetPersonByName', 'PC') IS NULL)
+BEGIN
+    exec('
+    CREATE Proc [dbo].GetPersonByName (
+    	@name varchar(128)
+    )
+    AS
+    BEGIN
+    	SET NOCOUNT ON;
+    	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+    
+        declare @googleId varchar(32);
+
+        SELECT @googleId = [GoogleId]
+    	FROM Person
+		WHERE Name = @name
+
+		EXEC GetPerson @googleId
     END
 	')
 END
@@ -420,7 +433,7 @@ BEGIN
 		SET [PersonWealth].[Rank] = r.[Rank]
 		FROM @rankings r
 		WHERE PersonWealth.rankTypeId = r.rankTypeId
-		AND PersonWealth.[PersonId] = r.[GoogleId]; 
+		AND PersonWealth.[PersonId] = r.[PersonId]; 
     END
 	')
 END
@@ -468,8 +481,8 @@ BEGIN
     	FROM Person
 		WHERE [GoogleId] = @GoogleId
 
-	    INSERT INTO [dbo].[Payment] (PersonId,Amount)
-		VALUES (@personId, @amount)
+	    INSERT INTO [dbo].[Payment] (GoogleId,Amount)
+		VALUES (@googleId, @amount)
 
 		SELECT SCOPE_IDENTITY() as PaymentId;
 
