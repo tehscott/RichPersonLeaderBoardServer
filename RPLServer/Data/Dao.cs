@@ -168,6 +168,34 @@ BEGIN
 	')
 END
 
+IF (object_id('GetPurchase', 'P') IS NULL AND object_id('GetPurchase', 'PC') IS NULL)
+BEGIN
+    exec('
+create Proc [dbo].[GetPurchase] (
+    	@orderId varchar(256)
+    )
+    AS
+    BEGIN
+    	SET NOCOUNT ON;
+    	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+    
+      SELECT [PurchaseId]
+            ,[GoogleId]
+            ,[autoRenewing]
+            ,[developerPayload]
+            ,[orderId]
+            ,[packageName]
+            ,[productId]
+            ,[purchaseState]
+            ,[purchaseTime]
+            ,[purchaseToken]
+            ,[InsertDate]
+            ,[UpdateDate]
+        FROM [dbo].[Purchase]
+		WHERE [orderId] = @orderId
+    END	')
+END
+
 IF (object_id('GetPersonAndSurroundingPeople', 'P') IS NULL AND object_id('GetPersonAndSurroundingPeople', 'PC') IS NULL)
 BEGIN
     exec('
@@ -668,11 +696,11 @@ END
             }
         }
 
-        public PurchaseRecord GetPurchase(string orderId)
+        public PurchaseData GetPurchase(string orderId)
         {
             using (DbConnection connection = new SqlConnection(_connectionString))
             {
-                return connection.Query<PurchaseRecord>("GetPurchase", new
+                return connection.Query<PurchaseData>("GetPurchase", new
                 {
                     orderId
                 },
