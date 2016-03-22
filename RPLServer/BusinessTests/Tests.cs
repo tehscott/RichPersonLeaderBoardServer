@@ -29,7 +29,7 @@ namespace BusinessTests
         public void MakeSureThatVerifyIsCorrectWithCorrectData()
         {
             //TODO: get the correct data for this
-            Assert.IsFalse(new BusinessLogic().VerifyPurchase(new PurchaseRecord()
+            Assert.IsTrue(new BusinessLogic().VerifyPurchase(new PurchaseRecord()
             {
                 INAPP_PURCHASE_DATA =
 @"{

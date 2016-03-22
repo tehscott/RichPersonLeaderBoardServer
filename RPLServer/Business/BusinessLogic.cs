@@ -184,76 +184,56 @@ namespace Business
                 purchaseData = JsonConvert.DeserializeObject<PurchaseData>(record.INAPP_PURCHASE_DATA);
             }
 
-            //TODO: Go to google and verify the purchse
-            var apikey = "AIzaSyCDZ0NsC1dEfUVNmVr80kXe9_hDiVgXVTI";
-            string serviceAccountEmail = "306227090509-compute@developer.gserviceaccount.com";//"your-mail-in-developer-console@developer.gserviceaccount.com";
-            var applicationName = "Rich Person Leaderboard";
-            var packageName = "com.mattandmikeandscott.richpersonleaderboard";
-            var productId = purchaseData.productId;//"your-inapp-item-id";
-            var token = purchaseData.purchaseToken;//"purchase-token";
-            var certificate = new X509Certificate2(@"key.p12", "notasecret", X509KeyStorageFlags.Exportable);
+            try
+            {
+                var apikey = "AIzaSyCDZ0NsC1dEfUVNmVr80kXe9_hDiVgXVTI";
+                string serviceAccountEmail = "richpersonleaderboard@api-6003077209940707168-964527.iam.gserviceaccount.com";//"306227090509-compute@developer.gserviceaccount.com";//"your-mail-in-developer-console@developer.gserviceaccount.com";
+                var applicationName = "Rich Person Leaderboard";
+                var packageName = "com.mattandmikeandscott.richpersonleaderboard";
+                var productId = purchaseData.productId;
+                var token = purchaseData.purchaseToken;
+                var certificate = new X509Certificate2(@"key.p12", "notasecret", X509KeyStorageFlags.Exportable);
 
-            ServiceAccountCredential credential = new ServiceAccountCredential(
-               new ServiceAccountCredential.Initializer(serviceAccountEmail)
-               {
-                   Scopes = new[] { "https://www.googleapis.com/auth/androidpublisher" }
-               }.FromCertificate(certificate));
+                ServiceAccountCredential credential = new ServiceAccountCredential(
+                   new ServiceAccountCredential.Initializer(serviceAccountEmail)
+                   {
+                       Scopes = new[] { "https://www.googleapis.com/auth/androidpublisher" }
+                   }.FromCertificate(certificate));
 
+                var service = new AndroidPublisherService(
+                    new BaseClientService.Initializer()
+                    {
+                        HttpClientInitializer = credential,
+                        ApplicationName = applicationName
+                    });
 
-            // var service = new AndroidPublisherService(
-            //new BaseClientService.Initializer()
-            //{
-            //    HttpClientInitializer = credential,
-            //    ApplicationName = "GooglePlay API Sample",
-            //});
-            // // try catch this function because if you input wrong params ( wrong token) google will return error.
-            // var request = service.Inappproducts.List("your-package-name");
-            // var purchaseState = request.Execute();
+                var request = service.Purchases.Products.Get(packageName, productId, token);
+                var purchaseState = request.Execute();
 
-            // // var request = service.Purchases.Products.Get(
-            // //"your-package-name", "your-inapp-item-id", "purchase-token"); get purchase'status
+                /*
+                Console.WriteLine(JsonConvert.SerializeObject(purchaseState));
+    {
+      "consumptionState":0,
+      "developerPayload":"3bd6aaf1-3d8b-4d95-97ab-3fd8012dce24",
+      "kind":"androidpublisher#productPurchase",
+      "purchaseState":0,
+      "purchaseTimeMillis":1458617266174,
+      "ETag":"\"o5gAPb6ySV14-48Jv5T-e_Ifp4s/M9QS9m5-BS77yf-C12pzS7Kf0TE\""
+    }            */
 
-
-
-            // Console.WriteLine(JsonConvert.SerializeObject(purchaseState));
-
-
-            //ServiceAccountCredential credential = new ServiceAccountCredential(
-            //    new ServiceAccountCredential.Initializer(serviceAccountEmail)
-            //    {
-            //        Scopes = new[] { "https://www.googleapis.com/auth/androidpublisher" }
-            //    }.FromPrivateKey(apikey));
-
-            var service = new AndroidPublisherService(
-                new BaseClientService.Initializer()
+                //TODO: figure out if this is the correct way to verify the purchase.
+                if (purchaseState.PurchaseState != 0 || purchaseState.ConsumptionState != 0)
                 {
-                    HttpClientInitializer = credential,
-                    ApplicationName = applicationName //"GooglePlay API Sample",
-                });
-
-            var request = service.Purchases.Products.Get(packageName, productId, token);
-            var purchaseState = request.Execute();
-
-            Console.WriteLine(JsonConvert.SerializeObject(purchaseState));
-
-
-            ////PurchasesResource.ProductsResource.GetRequest request = new PurchasesResource.ProductsResource.GetRequest(clientService, packageName, productId, token);
-            ////var certificate = new X509Certificate2(@"physical-path-to-your-key\key.p12", "notasecret", X509KeyStorageFlags.Exportable);
-            //// try catch this function because if you input wrong params ( wrong token) google will return error.
-            ////var request = service.Inappproducts.List(packageName);
-            ////var purchaseState = request.Execute();
-            ////var request = service.Purchases.Products.Get(packageName, itemId, purchaseToken);
-            ////var auth = new OAuth2Authenticator<WebServerClient>(provider, GetAuthorization);
-            ////var service = new AndroidPublisherService(
-            ////    new BaseClientService.Initializer()
-            ////    {
-            ////        Authenticator = auth,
-            ////        ApplicationName = applicationName
-            ////    });
+                    purchaseData = null;
+                }
+            }
+            catch (Exception)
+            {
+                purchaseData = null;
+            }
 
             //TODO: check to make sure that the OrderId is a unique value that I have not yet seen
-
-
+            
             return purchaseData;
         }
     }
