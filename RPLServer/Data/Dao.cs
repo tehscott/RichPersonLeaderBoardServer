@@ -670,7 +670,14 @@ END
 
         public PurchaseRecord GetPurchase(string orderId)
         {
-            throw new NotImplementedException();
+            using (DbConnection connection = new SqlConnection(_connectionString))
+            {
+                return connection.Query<PurchaseRecord>("GetPurchase", new
+                {
+                    orderId
+                },
+                    commandType: CommandType.StoredProcedure).FirstOrDefault();
+            }
         }
 
         public List<Person> GetPersonAndSurroundingPeople(string googleId, int range, RankType rankType = RankType.AllTime)
