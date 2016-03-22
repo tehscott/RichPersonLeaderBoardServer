@@ -191,12 +191,38 @@ namespace Business
             var packageName = "com.mattandmikeandscott.richpersonleaderboard";
             var productId = purchaseData.productId;//"your-inapp-item-id";
             var token = purchaseData.purchaseToken;//"purchase-token";
+            var certificate = new X509Certificate2(@"key.p12", "notasecret", X509KeyStorageFlags.Exportable);
 
             ServiceAccountCredential credential = new ServiceAccountCredential(
-                new ServiceAccountCredential.Initializer(serviceAccountEmail)
-                {
-                    Scopes = new[] { "https://www.googleapis.com/auth/androidpublisher" }
-                }.FromPrivateKey(apikey));
+               new ServiceAccountCredential.Initializer(serviceAccountEmail)
+               {
+                   Scopes = new[] { "https://www.googleapis.com/auth/androidpublisher" }
+               }.FromCertificate(certificate));
+
+
+            // var service = new AndroidPublisherService(
+            //new BaseClientService.Initializer()
+            //{
+            //    HttpClientInitializer = credential,
+            //    ApplicationName = "GooglePlay API Sample",
+            //});
+            // // try catch this function because if you input wrong params ( wrong token) google will return error.
+            // var request = service.Inappproducts.List("your-package-name");
+            // var purchaseState = request.Execute();
+
+            // // var request = service.Purchases.Products.Get(
+            // //"your-package-name", "your-inapp-item-id", "purchase-token"); get purchase'status
+
+
+
+            // Console.WriteLine(JsonConvert.SerializeObject(purchaseState));
+
+
+            //ServiceAccountCredential credential = new ServiceAccountCredential(
+            //    new ServiceAccountCredential.Initializer(serviceAccountEmail)
+            //    {
+            //        Scopes = new[] { "https://www.googleapis.com/auth/androidpublisher" }
+            //    }.FromPrivateKey(apikey));
 
             var service = new AndroidPublisherService(
                 new BaseClientService.Initializer()
