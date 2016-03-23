@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using System.Web;
 using Data;
 using Domain;
 using Google.Apis.AndroidPublisher.v2;
@@ -188,7 +190,7 @@ namespace Business
                 var packageName = "com.mattandmikeandscott.richpersonleaderboard";
                 var productId = JsonConvert.DeserializeObject<PurchaseData>(record.INAPP_PURCHASE_DATA).productId;
                 var token = JsonConvert.DeserializeObject<PurchaseData>(record.INAPP_PURCHASE_DATA).purchaseToken;
-                var certificate = new X509Certificate2(@"key.p12", "notasecret", X509KeyStorageFlags.Exportable);
+                var certificate = new X509Certificate2(HttpContext.Current.Server.MapPath("~/") + "key.p12", "notasecret", X509KeyStorageFlags.Exportable);
 
                 ServiceAccountCredential credential = new ServiceAccountCredential(
                     new ServiceAccountCredential.Initializer(serviceAccountEmail)
