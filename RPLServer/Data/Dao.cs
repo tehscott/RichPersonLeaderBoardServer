@@ -258,7 +258,7 @@ BEGIN
     	FROM Person
 		WHERE [GoogleId] = @GoogleId
 
-        SELECT pw.[RankTypeId], rt.[Name] as RankTypeName, pw.[Wealth], pw.[Rank], pw.[InsertDate], pw.[UpdateDate]
+        SELECT pw.[RankTypeId] as [RankType], rt.[Name] as RankTypeName, pw.[Wealth], pw.[Rank], pw.[InsertDate], pw.[UpdateDate]
     	FROM PersonWealth pw
 		JOIN [dbo].[RankType] rt on pw.[RankTypeId] = rt.[RankTypeId]
 		WHERE pw.personId = @personId
@@ -478,7 +478,10 @@ BEGIN
     	SET NOCOUNT ON;
     	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
 
-        INSERT INTO [dbo].[Person] ([Name], [GoogleId]) VALUES (@Name, @googleId);
+        IF NOT EXISTS (SELECT * FROM [dbo].[Person] WHERE GoogleId = @googleId)
+        BEGIN
+            INSERT INTO [dbo].[Person] ([Name], [GoogleId]) VALUES (@Name, @googleId);
+        END
 
 		DECLARE @personId int;
 		SELECT @personId = SCOPE_IDENTITY();
