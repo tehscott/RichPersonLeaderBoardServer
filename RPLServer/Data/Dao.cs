@@ -79,7 +79,7 @@ BEGIN
         [packageName] varchar(256) NOT NULL,
         [productId] varchar(256) NOT NULL,
         [purchaseState] int NOT NULL,
-        [purchaseTime] Datetime NOT NULL,
+        [purchaseTime] varchar(256) NOT NULL,
         [purchaseToken] varchar(256) NOT NULL,
         [InsertDate] [dateTime] NOT NULL CONSTRAINT DF_Purchase_InsertDate_GETDATE DEFAULT GETDATE(),
         [UpdateDate] [dateTime] NOT NULL CONSTRAINT DF_Purchase_UpdateDate_GETDATE DEFAULT GETDATE()
@@ -193,6 +193,57 @@ create Proc [dbo].[GetPurchase] (
             ,[UpdateDate]
         FROM [dbo].[Purchase]
 		WHERE [orderId] = @orderId
+    END	')
+END
+
+IF (object_id('RecordPurchase', 'P') IS NULL AND object_id('RecordPurchase', 'PC') IS NULL)
+BEGIN
+    exec('
+    CREATE Proc [dbo].[RecordPurchase](
+        @googleId varchar(32),
+        @autoRenewing bit,
+        @developerPayload varchar(256),
+        @orderId varchar(256),
+        @packageName varchar(256),
+        @productId varchar(256),
+        @purchaseState int,
+        @purchaseTime varchar(256),
+		@purchaseToken varchar(256)
+    )
+    AS
+    BEGIN
+    	SET NOCOUNT ON;
+    	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+    
+        declare @personId int;
+        SELECT @personId = [PersonId]
+    	FROM Person
+		WHERE [GoogleId] = @GoogleId
+
+	    INSERT INTO [dbo].[Purchase] (		
+            [GoogleId],
+            [autoRenewing],
+            [developerPayload],
+            [orderId],
+            [packageName],
+            [productId],
+            [purchaseState],
+            [purchaseTime],
+            [purchaseToken],
+            [InsertDate],
+            [UpdateDate]
+		)
+		VALUES (@googleId,
+            @autoRenewing,
+            @developerPayload,
+            @orderId,
+            @packageName,
+            @productId,
+            @purchaseState,
+            @purchaseTime,
+            @purchaseToken,
+            getdate(),
+            getDate())
     END	')
 END
 
@@ -478,14 +529,20 @@ BEGIN
     	SET NOCOUNT ON;
     	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
 
+        DECLARE @personId int;
+		
         IF NOT EXISTS (SELECT * FROM [dbo].[Person] WHERE GoogleId = @googleId)
         BEGIN
             INSERT INTO [dbo].[Person] ([Name], [GoogleId]) VALUES (@Name, @googleId);
+            SELECT @personId = SCOPE_IDENTITY();
         END
-
-		DECLARE @personId int;
-		SELECT @personId = SCOPE_IDENTITY();
-
+		ELSE 
+		BEGIN
+	        SELECT @personId = [PersonId]
+        	FROM Person
+    		WHERE [GoogleId] = @GoogleId
+		END
+		
 		INSERT INTO [dbo].[PersonWealth] ([PersonId], [RankTypeId], [Wealth], [Rank])
 		SELECT @personId, [RankTypeId], 0, 0
 		FROM RankType
@@ -678,7 +735,7 @@ END
                     commandType: CommandType.StoredProcedure).First();
             }
         }
-
+        
         public void RecordPurchase(string googleId, PurchaseData purchaseData)
         {
             using (DbConnection connection = new SqlConnection(_connectionString))
@@ -686,7 +743,7 @@ END
                 connection.Execute("RecordPurchase", new
                 {
                     googleId,
-                    purchaseData.autoRenewing,
+                    autoRenewing = !string.IsNullOrWhiteSpace(purchaseData.autoRenewing) && bool.Parse(purchaseData.autoRenewing),
                     purchaseData.developerPayload,
                     purchaseData.orderId,
                     purchaseData.packageName,
