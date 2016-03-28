@@ -93,7 +93,9 @@ namespace Server.Controllers
                 Business.CreatePayment(purchaseData);
             }
 
-            return Json(purchaseData != null);
+            return Json(new List<object> {
+                new { success = purchaseData != null }
+            });
         }
     }
 }
