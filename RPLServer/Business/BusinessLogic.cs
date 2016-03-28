@@ -113,9 +113,10 @@ namespace Business
         public void CreatePayment(PurchaseData purchaseData)
         {
             var data = JsonConvert.DeserializeObject<dynamic>(purchaseData.developerPayload);
-            
-            CreatePayment(data.googleId, GetAmount(purchaseData.productId));
-            Dao.RecordPurchase(data.googleId, purchaseData);
+            string googleId = (string) data.googleId;
+
+            CreatePayment(googleId, GetAmount(purchaseData.productId));
+            Dao.RecordPurchase(googleId, purchaseData);
         }
 
         private decimal GetAmount(string productId)

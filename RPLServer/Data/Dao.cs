@@ -686,7 +686,7 @@ END
                 connection.Execute("RecordPurchase", new
                 {
                     googleId,
-                    purchaseData.autoRenewing,
+                    autoRenewing = !string.IsNullOrWhiteSpace(purchaseData.autoRenewing) && bool.Parse(purchaseData.autoRenewing),
                     purchaseData.developerPayload,
                     purchaseData.orderId,
                     purchaseData.packageName,
