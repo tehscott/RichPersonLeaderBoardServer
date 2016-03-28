@@ -17,5 +17,6 @@ namespace Domain
         public List<Ranking> Rankings { get; set; }
         public List<Payment> Payments { get; set; }
         public List<Achievement> Achievements { get; set; }
+        public List<Asset> Assets { get; set; }
     }
 }

@@ -131,6 +131,24 @@ BEGIN
     )
 END
 
+IF object_id('Asset', 'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[Asset] (
+        [AssetId] [int] NOT NULL PRIMARY KEY IDENTITY,
+        [Name] [varchar](32),
+        [Description] [varchar](512)
+    )
+END
+
+IF object_id('PersonAsset', 'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[PersonAsset](
+        [PersonId] [int] NOT NULL FOREIGN KEY REFERENCES Person(PersonId),
+        [AssetId] [int] NOT NULL FOREIGN KEY REFERENCES Asset(AssetId),
+    	[InsertDate] [dateTime] NOT NULL CONSTRAINT DF_PersonAsset_InsertDate_GETDATE DEFAULT GETDATE()
+    )
+END
+
 IF (object_id('GetLastResetDate', 'P') IS NULL AND object_id('GetLastResetDate', 'PC') IS NULL)
 BEGIN
     exec('
@@ -336,6 +354,7 @@ BEGIN
 		EXEC GetWealth @googleId
 		EXEC GetPayments @googleId
 		EXEC GetAchievements @googleId
+		EXEC GetAssets @googleId
     END
 	')
 END
@@ -542,6 +561,53 @@ BEGIN
 		WHERE [GoogleId] = @GoogleId
 
 	    INSERT INTO [dbo].[PersonAchievement] (PersonId, AchievementId) VALUES (@personId, @achievementId)
+    END
+	')
+END
+
+IF (object_id('GetAssets', 'P') IS NULL AND object_id('GetAssets', 'PC') IS NULL)
+BEGIN    
+    exec('
+	Create Proc [dbo].GetAssets(
+    	@googleId varchar(32)
+    )
+    AS
+    BEGIN
+    	SET NOCOUNT ON;
+    	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+    
+        declare @personId int;
+        SELECT @personId = [PersonId]
+    	FROM Person
+		WHERE [GoogleId] = @GoogleId
+
+        SELECT a.[AssetId] as [AssetType], a.[Name], a.[Description], pa.[InsertDate]
+    	FROM [dbo].[Asset] a
+		JOIN [dbo].[PersonAsset] pa ON a.[AssetId] = pa.[AssetId]
+		WHERE pa.personId = @personId
+    	ORDER BY [InsertDate] DESC
+    END
+	')
+END
+
+IF (object_id('CreateAsset', 'P') IS NULL AND object_id('CreateAsset', 'PC') IS NULL)
+BEGIN    
+    exec('
+    Create Proc [dbo].CreateAsset(
+    	@googleId varchar(32),
+		@AssetId int
+    )
+    AS
+    BEGIN
+    	SET NOCOUNT ON;
+    	SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+    
+        declare @personId int;
+        SELECT @personId = [PersonId]
+    	FROM Person
+		WHERE [GoogleId] = @GoogleId
+
+	    INSERT INTO [dbo].[PersonAsset] (PersonId, AssetId) VALUES (@personId, @AssetId)
     END
 	')
 END

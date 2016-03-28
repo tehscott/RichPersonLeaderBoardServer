@@ -43,6 +43,8 @@
   <ItemGroup>
     <Compile Include="Achievement.cs" />
     <Compile Include="AchievementType.cs" />
+    <Compile Include="Asset.cs" />
+    <Compile Include="AssetType.cs" />
     <Compile Include="IDao.cs" />
     <Compile Include="Payment.cs" />
     <Compile Include="Person.cs" />
