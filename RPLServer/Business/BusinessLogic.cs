@@ -18,44 +18,50 @@ namespace Business
 {
     public class BusinessLogic
     {
+        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(typeof(BusinessLogic));
+
         private IDao Dao { get; }
 
         public BusinessLogic()
         {
             Dao = new Dao();
         }
-
+        
         public List<Person> GetPersons(RankType rankType, int offset = 0, int perPage = 100)
         {
             return Dao.GetPersons(offset, perPage, rankType);
+        }
+        public Person GetPerson(string googleId)
+        {
+            return Dao.GetPerson(googleId);
+        }
+        public Person GetPersonByName(string name)
+        {
+            return Dao.GetPerson(name);
+        }
+        public Person CreatePerson(string name, string googleId)
+        {
+            return Dao.CreatePerson(name, googleId);
+        }
+        public List<Person> GetPersonAndSurroundingPeople(string googleId, int range, RankType rankType)
+        {
+            return Dao.GetPersonAndSurroundingPeople(googleId, range, rankType);
         }
 
         public void ResetWealth(RankType rankType = RankType.Day)
         {
             Dao.ResetWealth(rankType);
         }
-
-        public Person GetPerson(string googleId)
+        public DateTime GetLastResetDate()
         {
-            return Dao.GetPerson(googleId);
-        }
-
-        public Person CreatePerson(string name, string googleId)
-        {
-            return Dao.CreatePerson(name, googleId);
+            return Dao.GetLastResetDate();
         }
 
         public List<Payment> GetPayments(string googleId)
         {
             return Dao.GetPayments(googleId);
         }
-
-        public Person GetPersonByName(string name)
-        {
-            return Dao.GetPerson(name);
-        }
-
-        public void CreatePayment(string googleId, decimal amount)
+        private void CreatePayment(string googleId, decimal amount)
         {
             Dao.CreatePayment(googleId, amount);
 
@@ -109,7 +115,6 @@ namespace Business
                 CreateAchievement(person, AchievementType.OneThousandSpender);
             }
         }
-
         public void CreatePayment(PurchaseData purchaseData)
         {
             var data = JsonConvert.DeserializeObject<dynamic>(purchaseData.developerPayload);
@@ -118,7 +123,6 @@ namespace Business
             CreatePayment(googleId, GetAmount(purchaseData.productId));
             Dao.RecordPurchase(googleId, purchaseData);
         }
-
         private decimal GetAmount(string productId)
         {
             switch (productId)
@@ -150,12 +154,10 @@ namespace Business
         {
             return Dao.GetAchievements(googleId);
         }
-
         public void CreateAchievement(string googleId, AchievementType achievementType)
         {
             CreateAchievement(Dao.GetPerson(googleId), achievementType);
         }
-
         public void CreateAchievement(Person person, AchievementType achievementType)
         {
             if (person.Achievements.All(achievement => achievement.AchievementType != achievementType))
@@ -163,24 +165,21 @@ namespace Business
                 Dao.CreateAchievement(person.GoogleId, achievementType);
             }
         }
-
-        public List<Person> GetPersonAndSurroundingPeople(string googleId, int range, RankType rankType)
-        {
-            return Dao.GetPersonAndSurroundingPeople(googleId, range, rankType);
-        }
-
-        public DateTime GetLastResetDate()
-        {
-            return Dao.GetLastResetDate();
-        }
-
+        
         public PurchaseData VerifyPurchase(PurchaseRecord record)
         {
             try
             {
                 if (!GooglePlayVerification.Verify(record.INAPP_PURCHASE_DATA, record.INAPP_DATA_SIGNATURE))
                 {
-                    //TODO: log this - the person sent a bad request. it should be noted
+                    Log.Warn(string.Format("The following was passed to Verify Purchase: {0}. It wasn't signed properly. The user should be talked to.", JsonConvert.SerializeObject(record)));
+                    return null;
+                }
+
+                var purchaseData = JsonConvert.DeserializeObject<PurchaseData>(record.INAPP_PURCHASE_DATA);
+                if (Dao.GetPurchase(purchaseData.orderId) != null)
+                {
+                    Log.Warn(string.Format("The following was passed to Verify Purchase: {0}. It has been passed in the past. The user should be talked to.", JsonConvert.SerializeObject(record)));
                     return null;
                 }
 
@@ -220,18 +219,15 @@ namespace Business
       "ETag":"\"o5gAPb6ySV14-48Jv5T-e_Ifp4s/M9QS9m5-BS77yf-C12pzS7Kf0TE\""
     }            */
 
-                var result = JsonConvert.DeserializeObject<PurchaseData>(record.INAPP_PURCHASE_DATA);
-
                 if (purchaseState.PurchaseState == 0 &&
-                    purchaseState.ConsumptionState == 0 &&
-                    Dao.GetPurchase(result.orderId) == null)
+                    purchaseState.ConsumptionState == 0)
                 {
-                    return result;
+                    return purchaseData;
                 }
             }
             catch (Exception e)
             {
-                //TODO: log this - the person sent a bad request, or google changed their interface. it should be noted
+                Log.Warn(string.Format("The following was passed to Verify Purchase: {0}. For some reason an exception was thrown by google when we passed it to them.", JsonConvert.SerializeObject(record)));
             }
 
             return null;

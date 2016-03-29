@@ -12,6 +12,8 @@ namespace Server.Controllers
     //[RequireHttps]
     public class LeaderboardController : Controller
     {
+        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(typeof(LeaderboardController));
+
         public static BusinessLogic Business { get; }
 
         static LeaderboardController()
@@ -53,16 +55,6 @@ namespace Server.Controllers
         public ActionResult Payments(string id)
         {
             return Json(Business.GetPayments(id), JsonRequestBehavior.AllowGet);
-        }
-
-        /// <summary>
-        /// TODO: this method should probably be AXED, however it is useful for debugging.
-        /// </summary>
-        /// <param name="request"></param>
-        [HttpPost]
-        public void Payments(CreatePaymentRequest request)
-        {
-            Business.CreatePayment(request.GoogleId, request.Amount);
         }
 
         [HttpGet]
