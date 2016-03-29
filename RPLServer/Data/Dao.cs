@@ -567,20 +567,19 @@ BEGIN
         BEGIN
             INSERT INTO [dbo].[Person] ([Name], [GoogleId]) VALUES (@Name, @googleId);
             SELECT @personId = SCOPE_IDENTITY();
+			
+		    INSERT INTO [dbo].[PersonWealth] ([PersonId], [RankTypeId], [Wealth], [Rank])
+		    SELECT @personId, [RankTypeId], 0, 0
+		    FROM RankType
         END
 		ELSE 
 		BEGIN
 	        SELECT @personId = [PersonId]
         	FROM Person
     		WHERE [GoogleId] = @GoogleId
-		END
-		
-		INSERT INTO [dbo].[PersonWealth] ([PersonId], [RankTypeId], [Wealth], [Rank])
-		SELECT @personId, [RankTypeId], 0, 0
-		FROM RankType
+		END		
 
-		SELECT @googleId as [GoogleId];
-    END
+		SELECT @googleId as [GoogleId];    END
 	')
 END
 
