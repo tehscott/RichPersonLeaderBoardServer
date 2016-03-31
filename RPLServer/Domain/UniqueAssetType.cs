@@ -1,0 +1,38 @@
+namespace Domain
+{
+    public enum UniqueAssetType
+    {
+        NamedCorporation = 1,
+        NamedIsland = 2,
+        TheHopeDiamond = 3,
+        TheCrownJewels = 4,
+        TheMonaLisa = 5,
+        ThePyramids = 6,
+        TheMoon = 7,
+        Antartica = 8,
+        TheEiffelTower = 9,
+        TheStatueOfLiberty = 10,
+        StBasilsCathedral = 11,
+        TheSphinx = 12,
+        Versailles = 13,
+        TheGreatWall = 14,
+        TajMahal = 15,
+        BigBen = 16,
+        MachuPicchu = 17,
+        TowerOfPisa = 18,
+        MountFuji = 19,
+        Stonehenge = 20,
+        NiagaraFalls = 21,
+        MountRushmore = 22,
+        VictoriaFalls = 23,
+        TheGrandCanyon = 24,
+        BuddhaOfKamakura = 25,
+        ChichenItza = 26,
+        GoldenGateBridge = 27,
+        SydneyOperaHouse = 28,
+        ForbiddenCity = 29,
+        TheColosseum = 30,
+        TheEmpireStateBuilding = 31,
+        TheLouvre = 32,
+    }
+}

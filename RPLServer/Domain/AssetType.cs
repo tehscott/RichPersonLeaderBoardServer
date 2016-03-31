@@ -24,14 +24,23 @@
         Jetpack         = 19,
         MazeratiCar     = 20, //TODO: spelling
         LamburghiniCar  = 21, //TODO: spelling
-        FerrariCar      = 22, //TODO: spelling
-        BugattiVeyron   = 23, //TODO: spelling
+        FerrariGto      = 22,
+        BugattiVeyron   = 23,
         Senator         = 24,
         GoldIngot       = 25,
         GoldCellPhone   = 26,
-        DesignerPuppy   = 27, //TODO: figure out name
+        ShihTzu         = 27,
         MartianRock     = 28,
+        BaseballTeam    = 29,
+        PrivateJet      = 30,
+        Yacht           = 31,
+        VanGoghPainting = 32,
+        Castle          = 33,
+        Statue          = 34,
+        MingVase        = 35,
+        BabeRuthJersey  = 36,
+        SuperComputer   = 37,
+        SpaceShuttle    = 38,
+        Skyscraper      = 39,
     }//TODO: make more stuff
-
-
 }

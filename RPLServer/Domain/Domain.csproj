@@ -57,6 +57,7 @@
     <Compile Include="PurchaseRecord.cs" />
     <Compile Include="Ranking.cs" />
     <Compile Include="RankType.cs" />
+    <Compile Include="UniqueAssetType.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
